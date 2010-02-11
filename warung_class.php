@@ -14,12 +14,11 @@ class Warung {
 
     function Warung() {
         $this->pluginUrl = trailingslashit(WP_PLUGIN_URL+'/'+dirname(plugin_basename(__FILE__)));
-        add_shortcode('warung', array(&$this, 'shortCode'));
-        add_action('init', array(&$this, 'init'));
+        add_shortcode('warung', array(&$this, 'shortCode'));        
     }
 
     function init() {
-        register_sidebar_widget('Warung Cart', array(&$this, 'warungCart'));
+        
     }
 
     function install() {
@@ -37,7 +36,7 @@ class Warung {
        
         $ret = '';
 
-        $vals = $this->splitMultipleType($name, $price, $type);
+        $vals = $this->formatForPost($name, $price, $type);
 
         if (count($vals) > 1) {
             // show select
@@ -73,19 +72,54 @@ class Warung {
         return $ret;
     }
 
-    function splitMultipleType($name, $price, $type) {
+    /**
+     *
+     * @param <string> $str
+     * @return <array> array [ 'name'=> name, 'price'=>price, 'type'=>type, 'quantyty'=>quantity, .., ]
+     */
+    function formatForSession($str) {
+        $ret = array();
+
+        $tmp = explode('|',$str);
+        if (count($tmp) == 3) {
+            $ret['name'] = $tmp[0];
+            $ret['price'] = $tmp[1];
+            $ret['type'] = $tmp[2];
+            $ret['quantity'] = 0;
+        } else if (count($tmp) == 2) {
+            $ret['name'] = $tmp[0];
+            $ret['price'] = $tmp[1];
+            $ret['quantity'] = 0;
+        }
+
+        return $ret;
+    }
+
+    /**
+     * Format given string to arrays of product to be used for form post (add to cart)
+     * @param <type> $name
+     * @param <type> $price
+     * @param <type> $type
+     * @return <array> array [ name-type@price => name|price[|type], .., ]
+     */
+    function formatForPost($name, $price, $type) {
         $ret = array();
 
         $types = null;
         $prices = null;
 
+        // checking
+        if (is_null($name) || is_null($price)) {
+            return ret;
+        }
+
         // get type
         if (! is_null($type) ) {
-            $types = preg_split('/\|/', $type);
+            $types = explode('|', $type);
         }
         // get price
         if (! is_null($price) ) {
-            $prices= preg_split('/\|/', $price);
+            $prices= explode('|', $price);
         }
 
         if (count($types) > 1) {
@@ -112,13 +146,7 @@ class Warung {
         return $ret;
     }
 
-    function warungCart($args=array()) {
-        extract($args);
-        echo $before_widget;
-        echo $before_title .'OCRE'. $after_title;
-        echo "<p>OYEEEE</p>";
-        echo $after_widget;
-    }
+    
 
 }
 ?>
