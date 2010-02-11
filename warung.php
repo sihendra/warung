@@ -52,7 +52,6 @@ function warung_cart($args=array()) {
         if (isset($_SESSION["wCart"])) {
             $exists = false;
             foreach($_SESSION["wCart"] as $i => $p) {
-                echo $added_product['name'].' vs '.$p['name'];
                 if ($added_product['name'] == $p['name']) {
                     // increase quantity
                     $p['quantity'] += 1;
@@ -63,7 +62,6 @@ function warung_cart($args=array()) {
             }
 
             if (!$exists) {
-                echo 'ditambahin';
                 array_push($_SESSION["wCart"],$added_product);
             } else {
                 sort($_SESSION["wCart"]);
@@ -78,14 +76,17 @@ function warung_cart($args=array()) {
     if (!isset($_SESSION["wCart"])) {
         $_SESSION["wCart"] = array();
     }
-    print_r($_SESSION["wCart"]);
-    ?>
-    <p>Jumlah item: <?php echo count($_SESSION["wCart"])?></p>
-    <?
     if (count($_SESSION["wCart"])) {
+        $total = 0;
+        echo '<table id="wcart">';
+        echo '<tr><th>Item</th><th>Jumlah</th><th>Harga</th></tr>';
         foreach ($_SESSION["wCart"] as $p) {
-            echo $p["name"].' = '.$p["quantity"]."<br/>";
+            echo '<tr><td>'.$p["name"].'</td><td>'.$p["quantity"].'</td><td>'.$p['price'].'</td></tr>';
+            $total += $p['quantity'] * $p['price'];
         }
+        echo '<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>';
+        echo '<tr><td>Total</td><td>&nbsp;</td><td>'.$total.'</td></tr>';
+        echo '</table>';
     }
     echo $after_widget;
 }
