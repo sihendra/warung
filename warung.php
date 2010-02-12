@@ -49,27 +49,41 @@ function warung_cart($args=array()) {
         // get name
         $added_product = formatForSession($_POST['product']);
 
-        if (isset($_SESSION["wCart"])) {
-            $exists = false;
-            foreach($_SESSION["wCart"] as $i => $p) {
-                if ($added_product['name'] == $p['name']) {
-                    // increase quantity
-                    $p['quantity'] += 1;
-                    unset($_SESSION["wCart"][$i]);
-                    $_SESSION["wCart"][$i]= $p;
-                    $exists = true;
-                }
-            }
-
-            if (!$exists) {
-                array_push($_SESSION["wCart"],$added_product);
-            } else {
-                sort($_SESSION["wCart"]);
-            }
-
-        } else {
+        if (!isset($_SESSION["wCart"])) {
             $_SESSION["wCart"] = array();
         }
+
+        $cart = &$_SESSION["wCart"];
+        $exists = false;
+        foreach($cart as $i => $p) {
+            if ($added_product['name'] == $p['name']) {
+                if (isset($_POST['update']) && isset($_POST['quantity'])) {
+                    // update quantity
+                    $q = $_POST['quantity'];
+                    if (!is_numeric($q)) {
+                        $q = 1;
+                    }
+                    $p['quantity'] = $q;
+                } else {
+                    // increase quantity
+                    $p['quantity'] += 1;
+                }
+                unset($cart[$i]);
+                if ($p['quantity'] > 0) {
+                    array_push($cart,$p);
+                }
+                $exists = true;
+            }
+        }
+
+        if (!$exists) {
+            // add new product
+            array_push($cart,$added_product);
+        }
+
+        sort($cart);
+
+       
     }
 
     // show cart
@@ -77,16 +91,38 @@ function warung_cart($args=array()) {
         $_SESSION["wCart"] = array();
     }
     if (count($_SESSION["wCart"])) {
-        $total = 0;
+        $total = 0;        
         echo '<table id="wcart">';
         echo '<tr><th>Item</th><th>Jumlah</th><th>Harga</th></tr>';
         foreach ($_SESSION["wCart"] as $p) {
-            echo '<tr><td>'.$p["name"].'</td><td>'.$p["quantity"].'</td><td>'.$p['price'].'</td></tr>';
+            //name|price[|type]
+            $pr = '';
+            extract($p);
+
+            if (isset($name)) {
+                $pr = $name;
+                if (isset($price)) {
+                    $pr .= '|'.$price;
+                    if (isset($type)) {
+                        $pr .= '|'.$type;
+                    }
+                }
+            }
+
+            echo '<tr><td>'.$p["name"].'</td>
+                <td>
+                <form action="#" method="POST">
+                <input type="text" name="quantity" value="'.$p["quantity"].'" size="2"/>
+                <input type="hidden" name="product" value="'.$pr.'"/>
+                <input type="submit" name="update" value="update" style="display:none;"/>
+                </form>
+                </td>
+                <td>'.$p['quantity'] * $p['price'].'</td></tr>';
             $total += $p['quantity'] * $p['price'];
         }
         echo '<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>';
         echo '<tr><td>Total</td><td>&nbsp;</td><td>'.$total.'</td></tr>';
-        echo '</table>';
+        echo '</table>';        
     }
     echo $after_widget;
 }
