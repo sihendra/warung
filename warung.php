@@ -35,6 +35,7 @@ if (class_exists("Warung")) {
 function warung_init() {
     session_start();
     register_sidebar_widget('Warung Cart', 'warung_cart');
+    add_filter('the_content', 'checkout');
 }
 
 function warung_cart($args=array()) {
@@ -121,7 +122,10 @@ function warung_cart($args=array()) {
         }
         echo '<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>';
         echo '<tr><td>Total</td><td>&nbsp;</td><td>'.$total.'</td></tr>';
-        echo '</table>';        
+        echo '</table>';
+        // checkout part
+        echo '<a href="'.get_permalink(2).'">Checkout</a>';
+
     }
     echo $after_widget;
 }
@@ -141,6 +145,67 @@ function formatForSession($str) {
     }
 
     return $ret;
+}
+
+function checkout($content) {
+    global $post;
+
+    ob_start();
+    
+    if ($post->ID == 2) {
+        if (function_exists('insert_custom_cform')) {
+
+            $fields = array();
+
+            // Need help? See your /wp-admin/admin.php?page=cforms/cforms-help.php
+            $formdata = array(
+                    array('Informasi Pembeli','fieldsetstart',0,0,0,0,0),
+                    array('Nama','textfield',0,1,0,1,0),
+                    array('Email','textfield',0,0,1,0,0),
+                    array('Nomor Telepon','textfield',0,1,0,0,0),
+                    array('Alamat','textfield',0,1,0,0,0),
+                    array('Kodepos','textfield',0,1,0,0,0),
+                    array('Kota','textfield',0,1,0,0,0),
+                    array('Komentar lainnya','textarea',0,0,0,0,0),
+                    array('','fieldsetend',0,0,0,0,0),
+                    array('Item','fieldsetstart',0,0,0,0,0)
+                    );
+
+            $body = '';
+            $total = 0;
+            foreach ( $_SESSION['wCart'] as $item )
+            {
+                    $totalprice = $item['quantity'] * $item['price'];
+                    $formdata[] = array( 'item|'.$item['quantity'] . ' x  '. $item['name'] . ' Price: ' . $totalprice , 'hidden',0,0,0,0,0);
+                    $total += $totalprice;
+            }
+            $formdata[] = array('total|'.$total, 'hidden',0,0,0,0,0);
+            $formdata[] = array('Attached to email.', 'textonly',0,0,0,0,0);
+            $formdata[] = array('','fieldsetend',0,0,0,0,0);
+
+            $i=0;
+            foreach ( $formdata as $field ) {
+                    $fields['label'][$i]        = $field[0];
+                    $fields['type'][$i]         = $field[1];
+                    $fields['isdisabled'][$i]   = $field[2];
+                    $fields['isreq'][$i]        = $field[3];
+                    $fields['isemail'][$i]      = $field[4];
+                    $fields['isclear'][$i]      = $field[5];
+                    $fields['isreadonly'][$i++] = $field[6];
+            }
+
+
+            insert_custom_cform($fields,'');
+        } else {
+            ?><span class="error"><a href="http://www.deliciousdays.com/cforms-plugin/">You must have CFormsII installed before you can use this email function.</a></span><?php
+        }
+    }
+    
+    $content .= ob_get_contents();
+    ob_clean();
+
+    return $content;
+
 }
 
 ?>
