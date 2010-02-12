@@ -52,10 +52,9 @@ function warung_cart($args=array()) {
         if (!isset($_SESSION["wCart"])) {
             $_SESSION["wCart"] = array();
         }
-
-        $cart = &$_SESSION["wCart"];
+        
         $exists = false;
-        foreach($cart as $i => $p) {
+        foreach($_SESSION["wCart"] as $i => $p) {
             if ($added_product['name'] == $p['name']) {
                 if (isset($_POST['update']) && isset($_POST['quantity'])) {
                     // update quantity
@@ -68,9 +67,9 @@ function warung_cart($args=array()) {
                     // increase quantity
                     $p['quantity'] += 1;
                 }
-                unset($cart[$i]);
+                unset($_SESSION["wCart"][$i]);
                 if ($p['quantity'] > 0) {
-                    array_push($cart,$p);
+                    array_push($_SESSION["wCart"],$p);
                 }
                 $exists = true;
             }
@@ -78,10 +77,10 @@ function warung_cart($args=array()) {
 
         if (!$exists) {
             // add new product
-            array_push($cart,$added_product);
+            array_push($_SESSION["wCart"],$added_product);
         }
 
-        sort($cart);
+        sort($_SESSION["wCart"]);
 
        
     }
