@@ -56,7 +56,7 @@ function warung_cart($args=array()) {
                     // increase quantity
                     $p['quantity'] += 1;
                     unset($_SESSION["wCart"][$i]);
-                    array_push($_SESSION["wCart"], $p);
+                    $_SESSION["wCart"][$i]= $p;
                     $exists = true;
                 }
             }
