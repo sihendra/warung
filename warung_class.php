@@ -11,6 +11,8 @@
  */
 class Warung {
     var $pluginUrl;
+    // name for our options in the DB
+    var $db_option = 'Warung_Options';
 
     function Warung() {
         $this->pluginUrl = trailingslashit(WP_PLUGIN_URL+'/'+dirname(plugin_basename(__FILE__)));
@@ -22,7 +24,8 @@ class Warung {
     }
 
     function install() {
-        
+        // set default options
+        $this->get_options();
     }
 
     // [warung name="Avocado" price="10000|20000" type="120x200|160x200"]
@@ -36,6 +39,9 @@ class Warung {
        
         $ret = '';
 
+        $options = $this->get_options();
+        $add2cart = $options['add_to_cart'];
+
         $vals = $this->formatForPost($name, $price, $type);
 
         if (count($vals) > 1) {
@@ -45,6 +51,7 @@ class Warung {
             // - name3|type 3|price3, name3 - type3 - price
             // +
             // add to cart
+
             $ret =
                 '<div id="wr_product">'.
                     '<form action="#" method="POST">'.
@@ -53,7 +60,7 @@ class Warung {
                 $ret .= '<option value="'.$v.'">'.$n.'</option>';
             }
             $ret .= '</select>'.
-                        '<input type="submit" value="Add to cart"/>'.
+                        '<input type="submit" value="'.$add2cart.'"/>'.
                     '</form>'.
                 '</div>';
         } else {
@@ -62,7 +69,7 @@ class Warung {
                 '<div id="w_product">'.
                     '<form action="#" method="POST">'.
                         '<input type="hidden" name="product" value="'.$vals[key($vals)].'"/>'.
-                        '<input type="submit" value="Add to cart"/>'.
+                        '<input type="submit" value="'.$add2cart.'"/>'.
                     '</form>'.
                 '</div>';
         }
@@ -122,31 +129,120 @@ class Warung {
             $prices= explode('|', $price);
         }
 
+
         if (count($types) > 1) {
             // key(name) => value
             // name - type @ price => name|price|type
             if (count($types) == count($price)) {
                 $i=0;
                 foreach ($types as $t) {
-                    $ret[$name.'-'.$t.'@'.$prices[$i]] = $name.'|'.$prices[$i].'|'.$t;
+                    $ret[$name.' - '.$t.'@'.$this->formatCurrency($prices[$i])] = $name.'|'.$prices[$i].'|'.$t;
                     $i++;
                 }
             } else {
                 $i=0;
                 foreach ($types as $t) {
                     $p = $prices[min($i, count($prices)-1)];
-                    $ret[$name.'-'.$t.'@'.$p] = $name.'|'.$p.'|'.$t;
+                    $ret[$name.' - '.$t.'@'.$this->formatCurrency($p)] = $name.'|'.$p.'|'.$t;
                     $i++;
                 }
             }
         } else {
-            $ret[$name.'@'.$price] = $name.'|'.$price;
+            $ret[$name.'@'.$this->formatCurrency($price)] = $name.'|'.$price;
         }
 
         return $ret;
     }
 
-    
+    function formatCurrency($price) {
+
+        $options = $this->get_options();
+        $currency = $options['currency'];
+
+        return $currency.$price;
+    }
+
+    // -------------------------- OPTIONS ------------------------------
+
+    function get_options() {
+
+        // default
+        $options = array(
+          'currency' => 'Rp. ',
+          'add_to_cart' => 'Beli',
+          'checkout_page' => 2
+        );
+
+        // get from db
+        $saved = get_option($this->db_option);
+
+        //print_r($saved);
+
+
+        // assign them
+        if (!empty($saved)) {
+            foreach ($saved as $key => $option) {
+                $options[$key] = $option;
+            }
+        }
+
+        //print_r($options);
+
+        // update if necessary
+        if ($saved != $options) {
+            update_option($this->db_option, $options);
+        }
+
+        return $options;
+    }
+
+    function handle_options() {
+        $options = $this->get_options();
+
+        if (isset($_POST['submitted'])) {
+            //check security
+            check_admin_referer('warung-nonce');
+
+            $options = array();
+            $options['currency'] = $_POST['currency'];
+            $options['add_to_cart'] = $_POST['add_to_cart'];
+            $options['checkout_page'] = $_POST['checkout_page'];
+
+            update_option($this->db_option, $options);
+
+            echo '<div class="updated fade"><p>Plugin Setting Saved.</p></div>';
+        }
+
+        $currency = $options['currency'];
+        $add2cart = $options['add_to_cart'];
+        $checkout_page = $options['checkout_page'];
+
+        echo
+            '<div class="wrap" style="max-width:950px !important;">
+                <h2>Warung</h2>
+                <div id="poststuff" style="margin-top:10px;">
+                    <div id="mainblock" style="width:710px">
+                        <div class="dbx-content">
+                            <form action="" method="post">
+                            '.wp_nonce_field('warung-nonce').'
+                                <label for="currency">Currency</label>
+                                <input id="currency" type="text" size="5" name="currency" value="'.$currency.'"/><br/>
+                                <label for="add_to_cart">Add to cart text</label>
+                                <input id="add_to_cart" type="text" size="10" name="add_to_cart" value="'.$add2cart.'"/><br/>
+                                <label for="checkout_page">Checkout Page ID</label>
+                                <input id="checkout_page" type="text" size="10" name="checkout_page" value="'.$checkout_page.'"/><br/>
+                                <div class="submit"><input type="submit" name="submitted" value="Update" /></div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>';
+    }
+
+    function admin_menu() {
+        add_menu_page('Warung Options', 'Warung', 8, basename(__FILE__), array(&$this, 'handle_options'));
+        //add_options_page('Warung Options', 'Warung', 8, basename(__FILE__), array(&$this, 'handle_options'));
+    }
 
 }
 ?>

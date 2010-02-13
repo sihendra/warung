@@ -22,12 +22,14 @@ if (version_compare($wp_version, "2.6", "<")) {
 // init
 require_once 'warung_class.php';
 
+$warung;
 if (class_exists("Warung")) {
     $warung = new Warung();
     if (isset($warung)) {
         register_activation_hook(__FILE__, array(&$warung,'install'));
     }
     add_action('init', 'warung_init');
+    add_action('admin_menu', array(&$warung, 'admin_menu'));
 } else {
     exit ("Class Warung does not exist!");
 }
@@ -124,7 +126,10 @@ function warung_cart($args=array()) {
         echo '<tr><td>Total</td><td>&nbsp;</td><td>'.$total.'</td></tr>';
         echo '</table>';
         // checkout part
-        echo '<a href="'.get_permalink(2).'">Checkout</a>';
+        global $warung;
+        $options = $warung->get_options();
+        $co_page = $options['checkout_page'];
+        echo '<a href="'.get_permalink($co_page).'">Checkout</a>';
 
     }
     echo $after_widget;
@@ -150,9 +155,13 @@ function formatForSession($str) {
 function checkout($content) {
     global $post;
 
+    global $warung;
+    $options = $warung->get_options();
+    $co_page = $options['checkout_page'];
+
     ob_start();
-    
-    if ($post->ID == 2) {
+
+    if ($post->ID == $co_page) {
         if (function_exists('insert_custom_cform')) {
 
             $fields = array();
@@ -206,6 +215,14 @@ function checkout($content) {
 
     return $content;
 
+}
+
+// CForms2 API for Emailer
+if (!function_exists('my_cforms_action()')) {
+    function my_cforms_action($cformsdata)
+    {
+        $_SESSION['wCart'] = array();
+    }
 }
 
 ?>
