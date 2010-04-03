@@ -41,89 +41,54 @@ function warung_init() {
 }
 
 function warung_cart($args=array()) {
+    global $warung;
     extract($args);
 
     echo $before_widget;
     echo $before_title .'Keranjang Belanja'. $after_title;
 
     // update cart
-    if (isset($_POST['product'])) {
+    
+    if (isset($_POST['add_to_cart'])) {
         // product = name|price[|type]
         // get name
-        $added_product = formatForSession($_POST['product']);
+        $added_product = $warung->warung_get_product_by_id($_POST['product_id']);
+        $added_product = formatForSession($added_product, $_POST["product_option"]);
 
-        if (!isset($_SESSION["wCart"])) {
-            $_SESSION["wCart"] = array();
-        }
-        
-        $exists = false;
-        foreach($_SESSION["wCart"] as $i => $p) {
-            if ($added_product['name'] == $p['name']) {
-                if (isset($_POST['update']) && isset($_POST['quantity'])) {
-                    // update quantity
-                    $q = $_POST['quantity'];
-                    if (!is_numeric($q)) {
-                        $q = 1;
-                    }
-                    $p['quantity'] = $q;
-                } else {
-                    // increase quantity
-                    $p['quantity'] += 1;
-                }
-                unset($_SESSION["wCart"][$i]);
-                if ($p['quantity'] > 0) {
-                    array_push($_SESSION["wCart"],$p);
-                }
-                $exists = true;
-            }
-        }
-
-        if (!$exists) {
-            // add new product
-            array_push($_SESSION["wCart"],$added_product);
-        }
-
-        sort($_SESSION["wCart"]);
-
-       
+        warung_add_to_cart($added_product);
+    } else if (!empty($_POST["update_cart"])) {
+        warung_update_cart($_POST["product_name"], $_POST["product_quantity"]);
     }
 
     // show cart
     if (!isset($_SESSION["wCart"])) {
         $_SESSION["wCart"] = array();
     }
-    if (count($_SESSION["wCart"])) {
+    if (count($_SESSION["wCart"]) > 0) {
+        sort($_SESSION["wCart"]);
+
         $total = 0;        
         echo '<table id="wcart">';
-        echo '<tr><th>Item</th><th>Jumlah</th><th>Harga</th></tr>';
+        echo '<tr><th>Item</th><th>Berat</th><th>Jumlah</th><th>Harga</th></tr>';
         foreach ($_SESSION["wCart"] as $p) {
             //name|price[|type]
             $pr = '';
             extract($p);
 
-            if (isset($name)) {
-                $pr = $name;
-                if (isset($price)) {
-                    $pr .= '|'.$price;
-                    if (isset($type)) {
-                        $pr .= '|'.$type;
-                    }
-                }
-            }
-
-            echo '<tr><td>'.$p["name"].'</td>
+            echo '<tr><td>'.$name.'</td>
+                <td>'.$weight.'</td>
                 <td>
-                <form action="#" method="POST">
-                <input type="text" name="quantity" value="'.$p["quantity"].'" size="2"/>
-                <input type="hidden" name="product" value="'.$pr.'"/>
-                <input type="submit" name="update" value="update" style="display:none;"/>
+                <form method="POST">
+                <input type="text" name="product_quantity" value="'.$quantity.'" size="2"/>
+                <input type="hidden" name="product_name" value="'.$name.'"/>
+                <input type="submit" name="update_cart" value="update" style="display:none;"/>
                 </form>
                 </td>
                 <td>'.$p['quantity'] * $p['price'].'</td></tr>';
             $total += $p['quantity'] * $p['price'];
         }
         echo '<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>';
-        echo '<tr><td>Total</td><td>&nbsp;</td><td>'.$total.'</td></tr>';
+        echo '<tr><td>Total</td><td>&nbsp</td><td>&nbsp;</td><td>'.$total.'</td></tr>';
         echo '</table>';
         // checkout part
         global $warung;
@@ -131,22 +96,81 @@ function warung_cart($args=array()) {
         $co_page = $options['checkout_page'];
         echo '<a href="'.get_permalink($co_page).'">Checkout</a>';
 
+    } else {
+        echo '<p>Kosong</p>';
     }
     echo $after_widget;
 }
 
-function formatForSession($str) {
+function warung_update_cart($name, $qtt) {
+    if (!empty($_SESSION["wCart"])) {
+        
+        foreach($_SESSION["wCart"] as $i => $p) {
+            if ($name == $p['name']) {
+                // increase quantity
+                $p['quantity'] = $qtt;
+
+                unset($_SESSION["wCart"][$i]);
+                if ($p['quantity'] > 0) {
+                    array_push($_SESSION["wCart"],$p);
+                }
+                break;
+            }
+        }
+
+    }
+
+}
+
+function warung_add_to_cart($product) {
+    if (!isset($_SESSION["wCart"])) {
+        $_SESSION["wCart"] = array();
+    }
+
+    $exists = false;
+    foreach($_SESSION["wCart"] as $i => $p) {
+        if ($product["name"] == $p['name']) {
+            // increase quantity
+            $p['quantity'] += 1;
+
+            unset($_SESSION["wCart"][$i]);
+            if ($p['quantity'] > 0) {
+                array_push($_SESSION["wCart"],$p);
+            }
+            $exists = true;
+            break;
+        }
+    }
+
+    if (!$exists) {
+        // add new product
+        array_push($_SESSION["wCart"],$product);
+    }
+
+
+}
+
+function formatForSession($product, $opt_name = '') {
+    global $warung;
     $ret = array();
 
-    $tmp = explode('|',$str);
-    if (count($tmp) == 3) {
-        $ret['name'] = $tmp[0].'-'.$tmp[2];
-        $ret['price'] = $tmp[1];
-        $ret['quantity'] = 1;
-    } else if (count($tmp) == 2) {
-        $ret['name'] = $tmp[0];
-        $ret['price'] = $tmp[1];
-        $ret['quantity'] = 1;
+    if (!empty($product)) {
+        if (!empty($opt_name)) {
+            $opt = $warung->warung_get_selected_option($product, $opt_name);
+            if (!empty($opt)) {
+                $ret["id"] = $product["id"];
+                $ret['name'] = $product["code"].'-'.$opt_name;
+                $ret['price'] = $opt->price;
+                $ret["weight"] = $opt->weight;
+                $ret['quantity'] = 1;
+            }
+        } else {
+            $ret["id"] = $product["id"];
+            $ret['name'] = $product["code"];
+            $ret['price'] = $product["price"];
+            $ret["weight"] = $product["weight"];
+            $ret['quantity'] = 1;
+        }
     }
 
     return $ret;
@@ -177,7 +201,7 @@ function checkout($content) {
                     array('Kota','textfield',0,1,0,0,0),
                     array('Komentar lainnya','textarea',0,0,0,0,0),
                     array('','fieldsetend',0,0,0,0,0),
-                    array('Item','fieldsetstart',0,0,0,0,0)
+                    array('Items','fieldsetstart',0,0,0,0,0)
                     );
 
             $body = '';
@@ -185,7 +209,7 @@ function checkout($content) {
             foreach ( $_SESSION['wCart'] as $item )
             {
                     $totalprice = $item['quantity'] * $item['price'];
-                    $formdata[] = array( 'item|'.$item['quantity'] . ' x  '. $item['name'] . ' Price: ' . $totalprice , 'hidden',0,0,0,0,0);
+                    $formdata[] = array('item|'.$item['quantity'] . ' x  '. $item['name'] . ' Price: ' . $totalprice , 'hidden',0,0,0,0,0);
                     $total += $totalprice;
             }
             $formdata[] = array('total|'.$total, 'hidden',0,0,0,0,0);
@@ -207,6 +231,34 @@ function checkout($content) {
             insert_custom_cform($fields,'');
         } else {
             ?><span class="error"><a href="http://www.deliciousdays.com/cforms-plugin/">You must have CFormsII installed before you can use this email function.</a></span><?php
+        }
+    } else {
+        // check is this post contains product informations
+
+        $product = $warung->warung_get_product_by_id($post->ID);
+
+        if (!empty($product)) {
+
+            echo '<div>';
+
+            echo '<form method="POST">';
+            echo '<input type="hidden" name="product_id" value="'.$product["id"].'">';
+            if (!empty($product["option_value"])) {
+                echo '<select name="product_option">';
+                foreach($product["option_value"] as $po) {
+                    echo '<option value="'.$po->name.'">'.$po->name.'@'.$po->price.'</option>';
+                }
+                echo "</select>";
+            } else {
+                echo '<h2>Rp. '.$product["price"].'<h2>';
+            }
+            
+            echo '<input type="submit" name="add_to_cart" value="Add to cart"/>';
+            echo '</form>';
+
+            echo '</div>';
+
+            
         }
     }
     

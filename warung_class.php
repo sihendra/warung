@@ -10,9 +10,9 @@
  * @author hendra
  */
 class Warung {
-    var $pluginUrl;
+    public $pluginUrl;
     // name for our options in the DB
-    var $db_option = 'Warung_Options';
+    public static $db_option = 'Warung_Options';
 
     function Warung() {
         $this->pluginUrl = trailingslashit(WP_PLUGIN_URL+'/'+dirname(plugin_basename(__FILE__)));
@@ -167,11 +167,18 @@ class Warung {
     function get_options() {
 
         // default
+        $def_page;
+        foreach (get_pages() as $page) {
+            $def_page = $page->ID;
+            break;
+        }
         $options = array(
           'currency' => 'Rp. ',
           'add_to_cart' => 'Beli',
-          'checkout_page' => 2
+          'checkout_page' => $def_page,
+          'prod_options' => array()
         );
+
 
         // get from db
         $saved = get_option($this->db_option);
@@ -196,26 +203,57 @@ class Warung {
         return $options;
     }
 
+    function parse_product_options($posts) {
+        $ret = array();
+
+        $prev_idx = 0;
+        $prev_name = '';
+        foreach ($posts as $key=>$val) {
+
+            if (!empty ($val)) {
+                if (strpos($key,'prod_option_name') !== false) {
+                    $tok = explode('-', $key);
+                    $prev_idx = $tok[1];
+                    $prev_name = $val;
+
+                } else if (strpos($key, 'prod_option_value') !== false) {
+
+                    if (strlen(trim($prev_name)) > 0) {
+                        $ret[$prev_name] = $val;
+                    }
+                }
+            }
+            
+        }
+
+        return $ret;
+    }
+
     function handle_options() {
         $options = $this->get_options();
 
         if (isset($_POST['submitted'])) {
             //check security
-            check_admin_referer('warung-nonce');
+            if (check_admin_referer('warung-nonce')) {
 
-            $options = array();
-            $options['currency'] = $_POST['currency'];
-            $options['add_to_cart'] = $_POST['add_to_cart'];
-            $options['checkout_page'] = $_POST['checkout_page'];
+                $options = array();
+                $options['currency'] = $_POST['currency'];
+                $options['add_to_cart'] = $_POST['add_to_cart'];
+                $options['checkout_page'] = $_POST['checkout_page'];
+                $options['prod_options']=$this->parse_product_options($_POST);
 
-            update_option($this->db_option, $options);
+                update_option($this->db_option, $options);
 
-            echo '<div class="updated fade"><p>Plugin Setting Saved.</p></div>';
+                echo '<div class="updated fade"><p>Plugin Setting Saved.</p></div>';
+            } else {
+                echo '<div class="updated fade"><p>Plugin Setting Not Saved caused by security breach.</p></div>';
+            }
         }
 
         $currency = $options['currency'];
         $add2cart = $options['add_to_cart'];
         $checkout_page = $options['checkout_page'];
+        $prod_options = $options['prod_options'];
 
         echo
             '<div class="wrap" style="max-width:950px !important;">
@@ -229,9 +267,31 @@ class Warung {
                                 <input id="currency" type="text" size="5" name="currency" value="'.$currency.'"/><br/>
                                 <label for="add_to_cart">Add to cart text</label>
                                 <input id="add_to_cart" type="text" size="10" name="add_to_cart" value="'.$add2cart.'"/><br/>
-                                <label for="checkout_page">Checkout Page ID</label>
-                                <input id="checkout_page" type="text" size="10" name="checkout_page" value="'.$checkout_page.'"/><br/>
-                                <div class="submit"><input type="submit" name="submitted" value="Update" /></div>
+                                <label for="checkout_page">Checkout Page</label>
+                                <select id="checkout_page" name="checkout_page"/>';
+                                foreach (get_pages() as $page) {
+                                    echo '<option value="'.$page->ID.'"'.($checkout_page == $page->ID ? '"selected=selected"':'').'>'.$page->post_title.'</option>';
+                                }
+                                echo '</select><br/>
+                                <label for="prod_options">Product Options Set</lable><br/>';
+                                $i = 0;
+                                if (is_array($prod_options)) {
+                                    foreach ($prod_options as $name=>$pos) {
+                                        echo '<label for="prod_option_name-'.$i.'">Name</label>';
+                                        echo '<input type="text" id="prod_option_name-'.$i.'" name="prod_option_name-'.$i.'" value="'.$name.'" />';
+                                        echo '<label for="prod_option_value-'.$i.'">Value</label>';
+                                        echo '<textarea id="prod_option_value-'.$i.'" name="prod_option_value-'.$i.'" rows="5" cols="50">'.$pos.'</textarea>';
+                                        echo '<br/>';
+                                        $i++;
+                                    }
+                                }
+
+                                echo '<label for="prod_option_name-'.$i.'">Name</label>';
+                                echo '<input type="text" id="prod_option_name-'.$i.'" name="prod_option_name-'.$i.'" value="" />';
+                                echo '<label for="prod_option_name-'.$i.'">Value</label>';
+                                echo '<textarea name="prod_option_value-'.$i.'" id="prod_option_value-'.$i.'" rows="5" cols="50"></textarea>';
+                                
+                                echo '<div class="submit"><input type="submit" name="submitted" value="Update" /></div>
                             </form>
                         </div>
                     </div>
@@ -241,8 +301,180 @@ class Warung {
 
     function admin_menu() {
         add_menu_page('Warung Options', 'Warung', 8, basename(__FILE__), array(&$this, 'handle_options'));
+        add_meta_box('warung-product-id','Product Information',array(&$this, 'display_product_custom_field'),'post','normal','high');
+
+        add_action('do_meta_boxes', array(&$this, 'display_meta'));
+        add_action('save_post', array($this,'warung_save_product_details'));
+
         //add_options_page('Warung Options', 'Warung', 8, basename(__FILE__), array(&$this, 'handle_options'));
     }
 
+    function warung_get_product_by_id($post_id) {
+        $ret=array();
+
+        $product_code = get_post_meta($post_id, '_warung_product_code', true);
+        $product_price = get_post_meta($post_id, '_warung_product_price', true);
+        $product_weight = get_post_meta($post_id, '_warung_product_weight', true);
+        $product_options_name = get_post_meta($post_id, '_warung_product_options', true);
+
+        if (!empty($product_code)) {
+            $ret["id"] = $post_id;
+            $ret["code"] = $product_code;
+            $ret["price"] = $product_price;
+            $ret["weight"] = $product_weight;
+
+            if (!empty($product_options_name)) {
+                $opts = $this->get_options();
+                $prod_opts = $opts['prod_options'];
+
+                if (!empty($prod_opts) && is_array($prod_opts)) {
+                    foreach($prod_opts as $k=>$v) {
+                        if ($k == $product_options_name) {
+                            $ret["option_name"]=$product_options_name;
+                            $ret["option_value"] = $this->warung_parse_product_options($v);
+                        }
+                    }
+                }
+            }
+        }
+
+        return $ret;
+    }
+
+    function warung_get_selected_option($product, $name) {
+        $ret;
+
+        if (!empty($product["option_value"])) {
+            foreach($product["option_value"] as $po) {
+                if ($name == $po->name) {
+                    $ret = $po;
+                    break;
+                }
+            }
+        }
+
+        return $ret;
+    }
+
+    function warung_save_product_details($post_id) {
+        // verify this came from the our screen and with proper authorization,
+        // because save_post can be triggered at other times
+
+        if ( !wp_verify_nonce( $_POST['warung_noncename'], plugin_basename(__FILE__) )) {
+            return $post_id;
+        }
+
+        // verify if this is an auto save routine. If it is our form has not been submitted, so we dont want
+        // to do anything
+        if ( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE )
+        return $post_id;
+
+
+        // Check permissions
+        if ( 'page' == $_POST['post_type'] ) {
+            if ( !current_user_can( 'edit_page', $post_id ) )
+              return $post_id;
+        } else {
+            if ( !current_user_can( 'edit_post', $post_id ) )
+              return $post_id;
+        }
+
+        // OK, we're authenticated: we need to find and save the data
+
+        $prod_code = $_POST['product_code'];
+        $prod_price = $_POST['product_price'];
+        $prod_weight = $_POST['product_weight'];
+        $prod_options = $_POST['product_options'];
+
+        if (!empty($prod_code)) {
+            update_post_meta($post_id, '_warung_product_code', $prod_code);
+            if (empty($prod_price)) {
+                $prod_price = 0;
+            }
+            if (empty($prod_weight)) {
+                $prod_weight = 1;
+            }
+            update_post_meta($post_id, '_warung_product_price', $prod_price);
+            update_post_meta($post_id, '_warung_product_weight', $prod_weight);
+            if ($prod_options != '-- none --') {
+                update_post_meta($post_id, '_warung_product_options', $prod_options);
+            } else {
+                delete_post_meta($post_id, '_warung_product_options');
+            }
+        }
+
+
+        // Do something with $mydata
+        // probably using add_post_meta(), update_post_meta(), or
+        // a custom table (see Further Reading section below)
+
+
+    }
+
+    function display_product_custom_field() {
+        // Use nonce for verification
+        global $post;
+
+        echo '<input type="hidden" name="warung_noncename" id="warung_noncename" value="' .
+        wp_create_nonce( plugin_basename(__FILE__) ) . '" />';
+
+        // get prev meta
+        $product = $this->warung_get_product_by_id($post->ID);
+
+        // product code
+        // price
+        // weight
+        // option set
+        echo '<label for="product_code">Code</label>
+        <input type="text" name="product_code" value="'.$product["code"].'"/><br/>
+
+        <label for="product_price">Price</label>
+        <input type="text" name="product_price" value="'.$product["price"].'"/><br/>
+
+
+        <label for="product_weight">Weight</label>
+        <input type="text" name="product_weight" value="'.$product["weight"].'"/><br/>';
+
+        // get from option
+        $prod_options = $this->get_options();
+        $prod_options = $prod_options["prod_options"];
+        // get from product custom field
+
+        if (is_array($prod_options) && !empty($prod_options)) {
+            echo '<label for="product_options">Option Set</label>
+            <select name="product_options">';
+                echo '<option value="-- none --">-- none --</option>';
+                foreach ($prod_options as $key => $value) {
+                    if ($product["option_name"] == $key) {
+                        echo '<option value="'.$key.'" selected="selected">'.$key.'</option>';
+                    } else {
+                        echo '<option value="'.$key.'">'.$key.'</option>';
+                    }
+                }
+            echo'</select><br/>';
+
+        }
+
+    }
+
+    function warung_parse_product_options($content) {
+        $content = str_replace('\\"', '"', $content);
+
+        $ret = explode("\n", $content);
+        foreach($ret as &$r) {
+            $r = '{'.$r.'}';
+            $r = json_decode($r);
+        }
+        return $ret;
+    }
+
+    function display_meta() {
+        foreach ( array( 'normal', 'advanced', 'side' ) as $context ) {
+                remove_meta_box( 'postcustom', 'post', $context );
+                remove_meta_box( 'postcustom', 'page', $context );
+                //Use the line below instead of the line above for WP versions older than 2.9.1
+                //remove_meta_box( 'pagecustomdiv', 'page', $context );
+            }
+    }
 }
 ?>
