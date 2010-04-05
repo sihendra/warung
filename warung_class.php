@@ -264,9 +264,9 @@ class Warung {
                             <form action="" method="post">
                             '.wp_nonce_field('warung-nonce').'
                                 <label for="currency">Currency</label>
-                                <input id="currency" type="text" size="5" name="currency" value="'.$currency.'"/><br/>
+                                <input id="currency" type="text" size="5" name="currency" value="'.stripslashes($currency).'"/><br/>
                                 <label for="add_to_cart">Add to cart text</label>
-                                <input id="add_to_cart" type="text" size="10" name="add_to_cart" value="'.$add2cart.'"/><br/>
+                                <input id="add_to_cart" type="text" size="10" name="add_to_cart" value="'.stripslashes($add2cart).'"/><br/>
                                 <label for="checkout_page">Checkout Page</label>
                                 <select id="checkout_page" name="checkout_page"/>';
                                 foreach (get_pages() as $page) {
@@ -278,9 +278,9 @@ class Warung {
                                 if (is_array($prod_options)) {
                                     foreach ($prod_options as $name=>$pos) {
                                         echo '<label for="prod_option_name-'.$i.'">Name</label>';
-                                        echo '<input type="text" id="prod_option_name-'.$i.'" name="prod_option_name-'.$i.'" value="'.$name.'" />';
+                                        echo '<input type="text" id="prod_option_name-'.$i.'" name="prod_option_name-'.$i.'" value="'.stripslashes($name).'" />';
                                         echo '<label for="prod_option_value-'.$i.'">Value</label>';
-                                        echo '<textarea id="prod_option_value-'.$i.'" name="prod_option_value-'.$i.'" rows="5" cols="50">'.$pos.'</textarea>';
+                                        echo '<textarea id="prod_option_value-'.$i.'" name="prod_option_value-'.$i.'" rows="5" cols="50">'.stripslashes($pos).'</textarea>';
                                         echo '<br/>';
                                         $i++;
                                     }
