@@ -246,11 +246,11 @@ function checkout($content) {
             if (!empty($product["option_value"])) {
                 echo '<select name="product_option">';
                 foreach($product["option_value"] as $po) {
-                    echo '<option value="'.$po->name.'">'.$po->name.'@'.$po->price.'</option>';
+                    echo '<option value="'.$po->name.'">'.$po->name.'@'.$warung->formatCurrency($po->price).'</option>';
                 }
                 echo "</select>";
             } else {
-                echo '<h2>Rp. '.$product["price"].'<h2>';
+                echo '<h2>Rp. '.$warung->formatCurrency($product["price"]).'<h2>';
             }
             
             echo '<input type="submit" name="add_to_cart" value="Add to cart"/>';
