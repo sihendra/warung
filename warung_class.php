@@ -15,7 +15,7 @@ class Warung {
     public static $db_option = 'Warung_Options';
 
     function Warung() {
-        $this->pluginUrl = trailingslashit(WP_PLUGIN_URL+'/'+dirname(plugin_basename(__FILE__)));
+        $this->pluginUrl = trailingslashit(WP_PLUGIN_URL.'/'.dirname(plugin_basename(__FILE__)));
     }
 
     function init() {
@@ -34,10 +34,22 @@ class Warung {
         $options = $this->get_options();
         $currency = $options['currency'];
 
-        return trim($currency).$price;
+        return trim($currency).number_format($price,0,',','.');
+    }
+
+    function formatWeight($weight) {
+        $options = $this->get_options();
+        $weight_sign = $options['weight_sign'];
+
+        return number_format($weight,0,',','.').' '.trim($weight_sign);
     }
 
     // -------------------------- OPTIONS ------------------------------
+
+    function get_weight_sign() {
+        $options = $this->get_options();
+        return $options['weight_sign'];
+    }
 
     function get_options() {
 
@@ -51,7 +63,9 @@ class Warung {
           'currency' => 'Rp. ',
           'add_to_cart' => 'Beli',
           'checkout_page' => $def_page,
-          'prod_options' => array()
+          'prod_options' => array(),
+          'shipping_options' => array(),
+          'weight_sign' => 'Kg'
         );
 
 
@@ -104,6 +118,41 @@ class Warung {
         return $ret;
     }
 
+    /**
+     * Parse all input element with name $name_form_name and value $value_form_name into assoc array
+     * example product_options_name-1="sprei" product_option_value-1="123"
+     * will be parsed into array ( sprei => 123 )
+     *
+     * @param <type> $posts
+     * @param <type> $name_form_name
+     * @param <type> $value_form_name
+     * @return <type>
+     */
+    function parse_nameval_options($posts, $name_form_name, $value_form_name) {
+        $ret = array();
+
+        $prev_idx = 0;
+        $prev_name = '';
+        foreach ($posts as $key=>$val) {
+
+            if (!empty ($val)) {
+                if (strpos($key,$name_form_name) !== false) {
+                    $tok = explode('-', $key);
+                    $prev_idx = $tok[1];
+                    $prev_name = $val;
+
+                } else if (strpos($key, $value_form_name) !== false) {
+                    if (strlen(trim($prev_name)) > 0) {
+                        $ret[$prev_name] = $val;
+                    }
+                }
+            }
+
+        }
+
+        return $ret;
+    }
+
     function handle_options() {
         $options = $this->get_options();
 
@@ -115,7 +164,9 @@ class Warung {
                 $options['currency'] = $_POST['currency'];
                 $options['add_to_cart'] = $_POST['add_to_cart'];
                 $options['checkout_page'] = $_POST['checkout_page'];
-                $options['prod_options']=$this->parse_product_options($_POST);
+                $options['prod_options']=$this->parse_nameval_options($_POST,'prod_option_name','prod_option_value');
+                $options['shipping_options']=$this->parse_nameval_options($_POST, 'shipping_option_name', 'shipping_option_value');
+                $options['weight_sign'] = $_POST['weight_sign'];
 
                 update_option($this->db_option, $options);
 
@@ -129,6 +180,8 @@ class Warung {
         $add2cart = $options['add_to_cart'];
         $checkout_page = $options['checkout_page'];
         $prod_options = $options['prod_options'];
+        $shipping_options = $options['shipping_options'];
+        $weight_sign = $options['weight_sign'];
 
         echo
             '<div class="wrap" style="max-width:950px !important;">
@@ -140,6 +193,8 @@ class Warung {
                             '.wp_nonce_field('warung-nonce').'
                                 <label for="currency">Currency</label>
                                 <input id="currency" type="text" size="5" name="currency" value="'.stripslashes($currency).'"/><br/>
+                                <label for="weight_sign">Weight Sign</label>
+                                <input id="weight_sign" type="text" size="5" name="weight_sign" value="'.stripslashes($weight_sign).'"/><br/>
                                 <label for="add_to_cart">Add to cart text</label>
                                 <input id="add_to_cart" type="text" size="10" name="add_to_cart" value="'.stripslashes($add2cart).'"/><br/>
                                 <label for="checkout_page">Checkout Page</label>
@@ -148,7 +203,7 @@ class Warung {
                                     echo '<option value="'.$page->ID.'"'.($checkout_page == $page->ID ? '"selected=selected"':'').'>'.$page->post_title.'</option>';
                                 }
                                 echo '</select><br/>
-                                <label for="prod_options">Product Options Set</lable><br/>';
+                                <h2>Product Options Set</h2>';
                                 $i = 0;
                                 if (is_array($prod_options)) {
                                     foreach ($prod_options as $name=>$pos) {
@@ -163,9 +218,29 @@ class Warung {
 
                                 echo '<label for="prod_option_name-'.$i.'">Name</label>';
                                 echo '<input type="text" id="prod_option_name-'.$i.'" name="prod_option_name-'.$i.'" value="" />';
-                                echo '<label for="prod_option_name-'.$i.'">Value</label>';
+                                echo '<label for="prod_option_value-'.$i.'">Value</label>';
                                 echo '<textarea name="prod_option_value-'.$i.'" id="prod_option_value-'.$i.'" rows="5" cols="50"></textarea>';
-                                
+
+                                // tiki, dll
+                                echo '<h2>Shipping Options</h2>';
+                                $i = 0;
+                                if (is_array($shipping_options)) {
+                                    foreach ($shipping_options as $name=>$pos) {
+                                        echo '<label for="shipping_option_name-'.$i.'">Name</label>';
+                                        echo '<input type="text" id="shipping_option_name-'.$i.'" name="shipping_option_name-'.$i.'" value="'.stripslashes($name).'" />';
+                                        echo '<label for="shipping_option_value-'.$i.'">Value</label>';
+                                        echo '<textarea id="shipping_option_value-'.$i.'" name="shipping_option_value-'.$i.'" rows="5" cols="50">'.stripslashes($pos).'</textarea>';
+                                        echo '<br/>';
+                                        $i++;
+                                    }
+                                }
+
+                                echo '<label for="shipping_option_name-'.$i.'">Name</label>';
+                                echo '<input type="text" id="shipping_option_name-'.$i.'" name="shipping_option_name-'.$i.'" value="" />';
+                                echo '<label for="shipping_option_value-'.$i.'">Value</label>';
+                                echo '<textarea name="shipping_option_value-'.$i.'" id="shipping_option_value-'.$i.'" rows="5" cols="50"></textarea>';
+
+
                                 echo '<div class="submit"><input type="submit" name="submitted" value="Update" /></div>
                             </form>
                         </div>
@@ -188,6 +263,7 @@ class Warung {
         $ret=array();
 
         $product_code = get_post_meta($post_id, '_warung_product_code', true);
+        $product_name = get_post_meta($post_id, '_warung_product_name', true);
         $product_price = get_post_meta($post_id, '_warung_product_price', true);
         $product_weight = get_post_meta($post_id, '_warung_product_weight', true);
         $product_options_name = get_post_meta($post_id, '_warung_product_options', true);
@@ -195,6 +271,7 @@ class Warung {
         if (!empty($product_code)) {
             $ret["id"] = $post_id;
             $ret["code"] = $product_code;
+            $ret["name"] = $product_name;
             $ret["price"] = $product_price;
             $ret["weight"] = $product_weight;
 
@@ -206,7 +283,7 @@ class Warung {
                     foreach($prod_opts as $k=>$v) {
                         if ($k == $product_options_name) {
                             $ret["option_name"]=$product_options_name;
-                            $ret["option_value"] = $this->warung_parse_product_options($v);
+                            $ret["option_value"] = $this->warung_parse_nameval_options($v);
                         }
                     }
                 }
@@ -216,12 +293,12 @@ class Warung {
         return $ret;
     }
 
-    function warung_get_selected_option($product, $name) {
+    function warung_get_selected_option($product, $id) {
         $ret;
 
         if (!empty($product["option_value"])) {
             foreach($product["option_value"] as $po) {
-                if ($name == $po->name) {
+                if ($id == $po->id) {
                     $ret = $po;
                     break;
                 }
@@ -257,12 +334,14 @@ class Warung {
         // OK, we're authenticated: we need to find and save the data
 
         $prod_code = $_POST['product_code'];
+        $prod_name = $_POST['product_name'];
         $prod_price = $_POST['product_price'];
         $prod_weight = $_POST['product_weight'];
         $prod_options = $_POST['product_options'];
 
-        if (!empty($prod_code)) {
+        if (!empty($prod_code) && !empty($prod_name)) {
             update_post_meta($post_id, '_warung_product_code', $prod_code);
+            update_post_meta($post_id, '_warung_product_name', $prod_name);
             if (empty($prod_price)) {
                 $prod_price = 0;
             }
@@ -303,6 +382,9 @@ class Warung {
         echo '<label for="product_code">Code</label>
         <input type="text" name="product_code" value="'.$product["code"].'"/><br/>
 
+        <label for="product_name">Name</label>
+        <input type="text" name="product_name" value="'.$product["name"].'"/><br/>
+
         <label for="product_price">Price</label>
         <input type="text" name="product_price" value="'.$product["price"].'"/><br/>
 
@@ -338,6 +420,18 @@ class Warung {
         $ret = explode("\n", $content);
         foreach($ret as &$r) {
             $r = '{'.$r.'}';
+            $r = json_decode($r);
+        }
+        return $ret;
+    }
+
+    function warung_parse_nameval_options($content) {
+        $content = str_replace('\\"', '"', $content);
+
+        $ret = explode("\n", $content);
+        $i=0;
+        foreach($ret as &$r) {
+            $r = '{"id":'.$i++.','.$r.'}';
             $r = json_decode($r);
         }
         return $ret;
