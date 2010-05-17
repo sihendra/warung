@@ -161,7 +161,7 @@ function process_params() {
     } else if (!empty($_REQUEST["wc_update"])) {
         foreach($_REQUEST as $key=>$val) {
             if (strpos($key,'qty_') !== false) {
-                echo $key.'->'.$val;
+                //echo $key.'->'.$val;
                 $tok = explode('_',$key);
                 if (count($tok) == 2) {
                     warung_update_cart($tok[1], $val);
@@ -698,7 +698,7 @@ function warung_add_to_cart($product) {
 
 function warung_empty_cart() {
     unset($_SESSION["wCart"]);
-    unset($_SESSION['wCartShipping']);
+    //unset($_SESSION['wCartShipping']);
 }
 
 function formatForSession($product, $opt_id = -1) {
@@ -772,7 +772,7 @@ function filter_content($content) {
             } else if ($step==4 && !empty($_REQUEST['send_order'])) {
                 if (send_order()) {
                     ?>
-<span>Terima kasih pesanan anda sudah kami terima. Kami akan menghubungi anda secepatnya.</span>
+<span>Terima kasih pesanan anda sudah kami terima. Kami akan menghubungi anda secepatnya. <a href="http://www.warungsprei.com">Kembali berbelanja</a></span>
                     <?
                     warung_empty_cart();
                 } else {
