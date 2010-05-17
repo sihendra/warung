@@ -2,7 +2,7 @@
 /* 
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
- */
+*/
 
 /**
  * Description of Warung
@@ -19,7 +19,7 @@ class Warung {
     }
 
     function init() {
-        
+
     }
 
     function install() {
@@ -27,8 +27,8 @@ class Warung {
         $this->get_options();
     }
 
-    
-    
+
+
     function formatCurrency($price) {
 
         $options = $this->get_options();
@@ -51,6 +51,45 @@ class Warung {
         return $options['weight_sign'];
     }
 
+    function get_checkout_page() {
+        $options = $this->get_options();
+        return $options['checkout_page'];
+    }
+
+    function get_checkout_url() {
+        return get_permalink($this->get_checkout_page());
+    }
+
+    function get_shipping_url() {
+        add_parameter($this->get_checkout_url(), array("step"=>2));
+    }
+
+    function get_shipping_options() {
+        $options = $this->get_options();
+        $shipping_options = $options["shipping_options"];
+        return $shipping_options;
+    }
+
+    function get_shipping_cities($shipping_name) {
+        $shipping_options = $this->get_shipping_options();
+
+        if (!empty ($shipping_name)) {
+            $cities = $shipping_options[$shipping_name];
+            if (!empty($cities)) {
+                return $this->warung_parse_nameval_options($cities);
+            }
+        }
+    }
+
+    function get_shipping_services() {
+        $shipping_options = $this->get_shipping_options();
+        $ret = array();
+        foreach ($shipping_options as $k=>$v) {
+            array_push($ret, $k);
+        }
+        return $ret;
+    }
+
     function get_options() {
 
         // default
@@ -60,12 +99,12 @@ class Warung {
             break;
         }
         $options = array(
-          'currency' => 'Rp. ',
-          'add_to_cart' => 'Beli',
-          'checkout_page' => $def_page,
-          'prod_options' => array(),
-          'shipping_options' => array(),
-          'weight_sign' => 'Kg'
+                'currency' => 'Rp. ',
+                'add_to_cart' => 'Beli',
+                'checkout_page' => $def_page,
+                'prod_options' => array(),
+                'shipping_options' => array(),
+                'weight_sign' => 'Kg'
         );
 
 
@@ -112,7 +151,7 @@ class Warung {
                     }
                 }
             }
-            
+
         }
 
         return $ret;
@@ -184,7 +223,7 @@ class Warung {
         $weight_sign = $options['weight_sign'];
 
         echo
-            '<div class="wrap" style="max-width:950px !important;">
+        '<div class="wrap" style="max-width:950px !important;">
                 <h2>Warung</h2>
                 <div id="poststuff" style="margin-top:10px;">
                     <div id="mainblock" style="width:710px">
@@ -199,49 +238,49 @@ class Warung {
                                 <input id="add_to_cart" type="text" size="10" name="add_to_cart" value="'.stripslashes($add2cart).'"/><br/>
                                 <label for="checkout_page">Checkout Page</label>
                                 <select id="checkout_page" name="checkout_page"/>';
-                                foreach (get_pages() as $page) {
-                                    echo '<option value="'.$page->ID.'"'.($checkout_page == $page->ID ? '"selected=selected"':'').'>'.$page->post_title.'</option>';
-                                }
-                                echo '</select><br/>
+        foreach (get_pages() as $page) {
+            echo '<option value="'.$page->ID.'"'.($checkout_page == $page->ID ? '"selected=selected"':'').'>'.$page->post_title.'</option>';
+        }
+        echo '</select><br/>
                                 <h2>Product Options Set</h2>';
-                                $i = 0;
-                                if (is_array($prod_options)) {
-                                    foreach ($prod_options as $name=>$pos) {
-                                        echo '<label for="prod_option_name-'.$i.'">Name</label>';
-                                        echo '<input type="text" id="prod_option_name-'.$i.'" name="prod_option_name-'.$i.'" value="'.stripslashes($name).'" />';
-                                        echo '<label for="prod_option_value-'.$i.'">Value</label>';
-                                        echo '<textarea id="prod_option_value-'.$i.'" name="prod_option_value-'.$i.'" rows="5" cols="50">'.stripslashes($pos).'</textarea>';
-                                        echo '<br/>';
-                                        $i++;
-                                    }
-                                }
+        $i = 0;
+        if (is_array($prod_options)) {
+            foreach ($prod_options as $name=>$pos) {
+                echo '<label for="prod_option_name-'.$i.'">Name</label>';
+                echo '<input type="text" id="prod_option_name-'.$i.'" name="prod_option_name-'.$i.'" value="'.stripslashes($name).'" />';
+                echo '<label for="prod_option_value-'.$i.'">Value</label>';
+                echo '<textarea id="prod_option_value-'.$i.'" name="prod_option_value-'.$i.'" rows="5" cols="50">'.stripslashes($pos).'</textarea>';
+                echo '<br/>';
+                $i++;
+            }
+        }
 
-                                echo '<label for="prod_option_name-'.$i.'">Name</label>';
-                                echo '<input type="text" id="prod_option_name-'.$i.'" name="prod_option_name-'.$i.'" value="" />';
-                                echo '<label for="prod_option_value-'.$i.'">Value</label>';
-                                echo '<textarea name="prod_option_value-'.$i.'" id="prod_option_value-'.$i.'" rows="5" cols="50"></textarea>';
+        echo '<label for="prod_option_name-'.$i.'">Name</label>';
+        echo '<input type="text" id="prod_option_name-'.$i.'" name="prod_option_name-'.$i.'" value="" />';
+        echo '<label for="prod_option_value-'.$i.'">Value</label>';
+        echo '<textarea name="prod_option_value-'.$i.'" id="prod_option_value-'.$i.'" rows="5" cols="50"></textarea>';
 
-                                // tiki, dll
-                                echo '<h2>Shipping Options</h2>';
-                                $i = 0;
-                                if (is_array($shipping_options)) {
-                                    foreach ($shipping_options as $name=>$pos) {
-                                        echo '<label for="shipping_option_name-'.$i.'">Name</label>';
-                                        echo '<input type="text" id="shipping_option_name-'.$i.'" name="shipping_option_name-'.$i.'" value="'.stripslashes($name).'" />';
-                                        echo '<label for="shipping_option_value-'.$i.'">Value</label>';
-                                        echo '<textarea id="shipping_option_value-'.$i.'" name="shipping_option_value-'.$i.'" rows="5" cols="50">'.stripslashes($pos).'</textarea>';
-                                        echo '<br/>';
-                                        $i++;
-                                    }
-                                }
+        // tiki, dll
+        echo '<h2>Shipping Options</h2>';
+        $i = 0;
+        if (is_array($shipping_options)) {
+            foreach ($shipping_options as $name=>$pos) {
+                echo '<label for="shipping_option_name-'.$i.'">Name</label>';
+                echo '<input type="text" id="shipping_option_name-'.$i.'" name="shipping_option_name-'.$i.'" value="'.stripslashes($name).'" />';
+                echo '<label for="shipping_option_value-'.$i.'">Value</label>';
+                echo '<textarea id="shipping_option_value-'.$i.'" name="shipping_option_value-'.$i.'" rows="5" cols="50">'.stripslashes($pos).'</textarea>';
+                echo '<br/>';
+                $i++;
+            }
+        }
 
-                                echo '<label for="shipping_option_name-'.$i.'">Name</label>';
-                                echo '<input type="text" id="shipping_option_name-'.$i.'" name="shipping_option_name-'.$i.'" value="" />';
-                                echo '<label for="shipping_option_value-'.$i.'">Value</label>';
-                                echo '<textarea name="shipping_option_value-'.$i.'" id="shipping_option_value-'.$i.'" rows="5" cols="50"></textarea>';
+        echo '<label for="shipping_option_name-'.$i.'">Name</label>';
+        echo '<input type="text" id="shipping_option_name-'.$i.'" name="shipping_option_name-'.$i.'" value="" />';
+        echo '<label for="shipping_option_value-'.$i.'">Value</label>';
+        echo '<textarea name="shipping_option_value-'.$i.'" id="shipping_option_value-'.$i.'" rows="5" cols="50"></textarea>';
 
 
-                                echo '<div class="submit"><input type="submit" name="submitted" value="Update" /></div>
+        echo '<div class="submit"><input type="submit" name="submitted" value="Update" /></div>
                             </form>
                         </div>
                     </div>
@@ -319,16 +358,16 @@ class Warung {
         // verify if this is an auto save routine. If it is our form has not been submitted, so we dont want
         // to do anything
         if ( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE )
-        return $post_id;
+            return $post_id;
 
 
         // Check permissions
         if ( 'page' == $_POST['post_type'] ) {
             if ( !current_user_can( 'edit_page', $post_id ) )
-              return $post_id;
+                return $post_id;
         } else {
             if ( !current_user_can( 'edit_post', $post_id ) )
-              return $post_id;
+                return $post_id;
         }
 
         // OK, we're authenticated: we need to find and save the data
@@ -370,7 +409,7 @@ class Warung {
         global $post;
 
         echo '<input type="hidden" name="warung_noncename" id="warung_noncename" value="' .
-        wp_create_nonce( plugin_basename(__FILE__) ) . '" />';
+                wp_create_nonce( plugin_basename(__FILE__) ) . '" />';
 
         // get prev meta
         $product = $this->warung_get_product_by_id($post->ID);
@@ -400,14 +439,14 @@ class Warung {
         if (is_array($prod_options) && !empty($prod_options)) {
             echo '<label for="product_options">Option Set</label>
             <select name="product_options">';
-                echo '<option value="-- none --">-- none --</option>';
-                foreach ($prod_options as $key => $value) {
-                    if ($product["option_name"] == $key) {
-                        echo '<option value="'.$key.'" selected="selected">'.$key.'</option>';
-                    } else {
-                        echo '<option value="'.$key.'">'.$key.'</option>';
-                    }
+            echo '<option value="-- none --">-- none --</option>';
+            foreach ($prod_options as $key => $value) {
+                if ($product["option_name"] == $key) {
+                    echo '<option value="'.$key.'" selected="selected">'.$key.'</option>';
+                } else {
+                    echo '<option value="'.$key.'">'.$key.'</option>';
                 }
+            }
             echo'</select><br/>';
 
         }
@@ -439,11 +478,32 @@ class Warung {
 
     function display_meta() {
         foreach ( array( 'normal', 'advanced', 'side' ) as $context ) {
-                remove_meta_box( 'postcustom', 'post', $context );
-                remove_meta_box( 'postcustom', 'page', $context );
-                //Use the line below instead of the line above for WP versions older than 2.9.1
-                //remove_meta_box( 'pagecustomdiv', 'page', $context );
+            remove_meta_box( 'postcustom', 'post', $context );
+            remove_meta_box( 'postcustom', 'page', $context );
+            //Use the line below instead of the line above for WP versions older than 2.9.1
+            //remove_meta_box( 'pagecustomdiv', 'page', $context );
+        }
+    }
+
+    //-- util
+    function add_parameter($url, $param) {
+        $ret=$url;
+        $qstr='';
+        $i=0;
+        foreach ($param as $key=>$value) {
+            if ($i++ == 0) {
+                $qstr .= $key.'='.$value;
+            } else {
+                $qstr .= '&'.$key.'='.$value;
             }
+        }
+        if (strpos($url,'?')) {
+            $ret = $url.'&'.$qstr;
+        } else {
+            $ret = $url.'?'.$qstr;
+        }
+
+        return $ret;
     }
 }
 ?>

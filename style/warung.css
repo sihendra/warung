@@ -1,0 +1,20 @@
+/* 
+    Document   : warung
+    Created on : May 18, 2010, 12:23:39 AM
+    Author     : hendra
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+/* 
+   TODO customize this sample style
+   Syntax recommendation http://www.w3.org/TR/REC-CSS2/
+*/
+
+root { 
+    display: block;
+}
+
+#shipping_form fieldset, #order-summary fieldset {
+    border: 1px solid; padding: 10px;
+}
