@@ -4,5 +4,7 @@
  */
 jQuery(document).ready(function() {
    //alert('called');
+   jQuery("#wCart_shipping_form").validate();
 });
+
 

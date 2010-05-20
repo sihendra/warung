@@ -50,6 +50,8 @@ function warung_init() {
 function init_scripts() {
     global $warung;
     wp_enqueue_script('jquery');
+    wp_enqueue_script('jquery_form', $warung->pluginUrl.'scripts/jquery.form.js',array('jquery'));
+    wp_enqueue_script('jquery_validaton', $warung->pluginUrl.'scripts/jquery.validate.js',array('jquery'));
     wp_enqueue_script('warung_js',$warung->pluginUrl.'scripts/warung.js',array('jquery'));
 }
 function init_styles() {
@@ -172,7 +174,6 @@ function process_params() {
         warung_update_cart($_REQUEST["wc_rem"],0);
     } else if (!empty($_REQUEST["wc_clear"])) {
         warung_empty_cart();
-        unset($_SESSION['wCartShipping']);
     } else if (!empty($_REQUEST["scheckout"])) {
         update_shipping();
     }
@@ -395,7 +396,7 @@ function show_shipping_form() {
 
     ?>
 <div id="shipping_form">
-    <form method="POST">
+    <form method="POST" name="wCart_shipping_form">
         <input type="hidden" name="step" value="3"/>
 
         <fieldset>
@@ -576,10 +577,7 @@ function warung_cart($args=array()) {
     echo $before_title .'Keranjang Belanja'. $after_title;
 
     // show cart
-    if (!isset($_SESSION["wCart"])) {
-        $_SESSION["wCart"] = array();
-    }
-    if (count($_SESSION["wCart"]) > 0) {
+    if (!empty($_SESSION["wCart"]) && count($_SESSION["wCart"]) > 0) {
         $options = $warung->get_options();
         $co_page = get_permalink($options['checkout_page']);
 
@@ -824,13 +822,6 @@ function filter_content($content) {
 
     return $content;
 
-}
-
-// CForms2 API for Emailer
-if (!function_exists('my_cforms_action()')) {
-    function my_cforms_action($cformsdata) {
-        $_SESSION['wCart'] = array();
-    }
 }
 
 ?>
