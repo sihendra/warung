@@ -18,3 +18,8 @@ root {
 #shipping_form fieldset, #order-summary fieldset {
     border: 1px solid; padding: 10px;
 }
+#wcart_icon {
+    position: absolute;
+    top: 10px;
+    left: -15px;
+}

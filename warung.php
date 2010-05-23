@@ -603,8 +603,11 @@ function warung_cart($args=array()) {
     global $warung;
     extract($args);
 
+    $cartImage = $warung->pluginUrl."images/cart.png";
+
     echo $before_widget;
     echo $before_title .'Keranjang Belanja'. $after_title;
+    echo '<div id="wcart_icon"><img src="'.$cartImage.'" alt="shopping cart"/></div>';
 
     // show cart
 
