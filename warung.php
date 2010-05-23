@@ -490,6 +490,36 @@ function show_confirmation_form() {
     return $ret;
 }
 
+function get_cart_summary() {
+    $ret = array();
+    if (isset($_SESSION["wCart"]) && count($_SESSION["wCart"]) > 0) {
+
+        $harga_per_kg = 0;
+        if (!empty($_SESSION['wCartShipping'])) {
+            $harga_per_kg = $_SESSION['wCartShipping']['harga_per_kg'];
+        }
+
+        $total_weight = 0;
+        $total_price = 0;
+        $total_items = 0;
+        $total_ongkir = 0;
+
+        foreach ($_SESSION["wCart"] as $p) {
+            //name|price[|type]
+            extract($p);
+            $total_price += $p['quantity'] * $p['price'];
+            $total_weight += $weight;
+            $total_items += $p['quantity'];
+        }
+
+        $ret['total_price'] = $total_price;
+        $ret['total_ongkir'] = $total_weight * $harga_per_kg;
+        $ret['total_items'] = $total_items;
+    }
+
+    return $ret;
+}
+
 function show_detailed_cart() {
     global $warung;
 
@@ -577,69 +607,18 @@ function warung_cart($args=array()) {
     echo $before_title .'Keranjang Belanja'. $after_title;
 
     // show cart
-    if (!empty($_SESSION["wCart"]) && count($_SESSION["wCart"]) > 0) {
+
+    $cart_sumary = get_cart_summary();
+
+    if (!empty($cart_sumary)) {
         $options = $warung->get_options();
         $co_page = get_permalink($options['checkout_page']);
-
-        /*        $shipping_options = $options['shipping_options'];
-        $shipping_name = $_REQUEST["shipping_name"];
-        $shipping_city_name = $REQUEST["shipping_city_name"];
-        $shipping_cities = array();
-        */
-        sort($_SESSION["wCart"]);
-
-        $total = 0;
-        foreach ($_SESSION["wCart"] as $p) {
-            //name|price[|type]
-            $pr = '';
-            extract($p);
-
-            $total += $p['quantity'];
-        }
-        echo '<div id="wcart"><p>Ada '.$total.' Item</div>';
-
-
-        /*
-        ob_start();
-        echo '<form method="POST">';
-        // show shipping name
-        if (count($shipping_options)>1) {
-            echo '<select name="shipping_name">';
-            foreach ($shipping_options as $n=>$v) {
-                echo '<option value="'.$n.'" '.($n==$shipping_name)?'selected="selected"':''.'>'.$n.'</option>';
-            }
-            echo '</select>';
-        } else {
-            $shipping_name = key($shipping_options);
-        }
-        
-        $shipping_cities = $warung->warung_parse_nameval_options($shipping_options[$shipping_name]);
-        echo '<select name="shipping_city_name">';
-            foreach ($shipping_cities as $c) {
-                $selected = '';
-                if ($c->kota == $shipping_city_name) {
-                    $selected = 'selected="selected"';
-                }
-                echo '<option value="'.$c->kota.'" '.$selected.'>'.$c->kota.'</option>';
-            }
-         echo '</select>';
-        //var_dump($shipping_cities);
-        echo 'shipping_name: '.$shipping_name;
-        //echo '<br/>shipping_cities: '.$shipping_opt_name;
-
-        // show cities
-        echo '</form>';
-        $shipping_form = ob_get_contents();
-        ob_end_clean();
-        */
-        // checkout part
-
         $clear_page = add_parameter(get_permalink($post->ID), array("wc_clear"=>"1"));
 
-        echo '<div id="wcart_co"><a href="'.$co_page.'">Checkout</a>&nbsp|&nbsp';
-        echo '<a href="'.$clear_page.'">Clear</a><div>';
-        //echo '<form method="POST"><input type="submit" name="wcart_clear" value="clear"/></form>';
+        extract($cart_sumary);
 
+        echo '<div id="wcart"><p>Ada '.$total_items.' Item</p><p>Total: '.$warung->formatCurrency($total_price).'</p></div>';
+        echo '<div id="wcart_co"><a href="'.$co_page.'">Checkout</a>&nbsp|&nbsp<a href="'.$clear_page.'">Clear</a></div>';
     } else {
         echo '<p id="status">Kosong</p>';
     }
