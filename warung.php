@@ -183,7 +183,7 @@ function get_order_summary($isAdminView=false) {
     global $warung;
     ob_start();
 
-    $harga_per_kg = 0;
+    $harga_per_kg = -1;
     if (!empty($_SESSION['wCartShipping'])) {
         $harga_per_kg = $_SESSION['wCartShipping']['harga_per_kg'];
     }
@@ -216,7 +216,7 @@ function get_order_summary($isAdminView=false) {
                 ?>
             <tr><td colspan="2">&nbsp;</td><td colspan="2">Total sebelum ongkos kirim</td><td><?=$warung->formatCurrency($total)?></td></tr>
                 <?
-                if(!empty($harga_per_kg)) {
+                if($harga_per_kg != -1) {
                     ?>
             <tr><td colspan="2">&nbsp;</td><td colspan="2">Total setelah ongkos kirim</td><td><?=$warung->formatCurrency($total+$harga_per_kg*$total_weight)?></td></tr>
                     <?
@@ -528,7 +528,7 @@ function show_detailed_cart() {
     // show cart
     if (isset($_SESSION["wCart"]) && count($_SESSION["wCart"]) > 0) {
 
-        $harga_per_kg = 0;
+        $harga_per_kg = -1;
         if (!empty($_SESSION['wCartShipping'])) {
             $harga_per_kg = $_SESSION['wCartShipping']['harga_per_kg'];
         }
@@ -571,7 +571,7 @@ function show_detailed_cart() {
         <tr><td colspan="3"></td><td><input type="submit" name="wc_update" value="Update"/></td><td>&nbsp;</td></tr>
         <tr><td colspan="3">&nbsp;</td><td>Total sebelum ongkos kirim</td><td><?=$warung->formatCurrency($total)?></td></tr>
                 <?
-                if(!empty($harga_per_kg)) {
+                if($harga_per_kg != -1) {
                     ?>
         <tr><td colspan="3">&nbsp;</td><td>Total setelah ongkos kirim</td><td><?=$warung->formatCurrency($total+$harga_per_kg*$total_weight)?></td></tr>
                     <?
