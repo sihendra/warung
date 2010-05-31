@@ -3,8 +3,34 @@
  * and open the template in the editor.
  */
 jQuery(document).ready(function() {
-   //alert('called');
-   jQuery("#wCart_shipping_form").validate();
+    jQuery("#wCart_shipping_form2").validate({
+        rules: {
+            semail: {// compound rule
+                required: true,
+                email: true
+            },
+            sphone: {
+                required: true,
+                number: true
+            },
+            sname: "required",
+            saddress: "required"
+        }
+        /*
+        ,messages: {
+        semail: "Tolong isi field ini."
+        }
+        */
+
+    });
+
+    jQuery("#wCart_confirmation").validate({
+        submitHandler: function(form) {
+            if (confirm("Apakah data sudah benar?")) {
+                form.submit();
+            }
+        }
+    })
 });
 
 

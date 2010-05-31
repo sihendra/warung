@@ -100,7 +100,7 @@ class Warung {
         }
         $options = array(
                 'currency' => 'Rp. ',
-                'add_to_cart' => 'Beli',
+                'add_to_cart' => 'Add to Cart',
                 'checkout_page' => $def_page,
                 'prod_options' => array(),
                 'shipping_options' => array(),

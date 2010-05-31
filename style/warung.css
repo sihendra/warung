@@ -15,11 +15,81 @@ root {
     display: block;
 }
 
-#shipping_form fieldset, #order-summary fieldset {
-    border: 1px solid; padding: 10px;
+/* ########### SHIPPING FORM ############*/
+#wCart_shipping_form, #order-summary {
+    border: 1px solid;
+    padding: 10px;
+    width: 580px;
 }
+#wCart_shipping_form .submit {
+    margin-left: 155px;
+    margin-top: 10px;
+}
+#wCart_shipping_form label {
+    display:block;
+    float:left;
+    margin-right:5px;
+    text-align:right;
+    width:150px;
+}
+#wCart_shipping_form label.error {
+    width: 250px;
+    display: block;
+    float: left;
+    color: red;
+    padding-left: 10px;
+}
+#wCart_shipping_form .error {
+    border-color: red;
+}
+#wCart_shipping_form .wCart_form_row {
+    padding: 5px 0;
+    clear: both;
+    width: 100%;
+}
+#wCart_shipping_form input[type=text], select, textarea {
+    width: 250px;
+    float: left;
+}
+#wCart_shipping_form textarea {
+    height: 50px;
+}
+
+/* #### Shopping Cart #### */
 #wcart_icon {
     position: absolute;
     top: 10px;
     left: -15px;
+}
+
+#wcart-detailed {
+    width: 580px;
+    padding: 10px;
+}
+
+#wcart-detailed td {
+    text-align: right;
+    padding: 4px 4px 0px 4px;
+    border-bottom: 1px solid;
+}
+
+#wcart-detailed th {
+    border: 1px solid;
+    padding: 4px 4px 0px 4px;
+}
+
+#wcart-detailed .wcart-td-footer {
+    border: none;
+}
+
+/*
+ * ## ADD 2 CART ##
+*/
+#wCart_add_2_cart {
+
+}
+
+/* ###### SUMMARY ##########*/
+#order-summary {
+    width: 580px;
 }
