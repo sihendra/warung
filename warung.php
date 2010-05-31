@@ -63,18 +63,6 @@ function init_styles() {
 //# USER DATA/SHIPPING #
 //######################
 
-function getShippingInfo() {
-    $info = getDefaultShippingInfo();
-    if (!isset($_COOKIE["wCartShipping"])) {
-        // create default
-        setcookie("wCartShipping", serialize($info), time()+60*60*24*30);
-    } else {
-        $info = unserialize($_COOKIE[wCartShipping]);
-    }
-
-    return $info;
-}
-
 function get_shipping_options($name='') {
     global $warung;
     $options = $warung->get_options();
@@ -104,50 +92,35 @@ function get_shipping_info($shipping_name, $city_name) {
     return $ret;
 }
 
-function getDefaultShippingInfo() {
+function get_shipping() {
     global $warung;
-    $options = $warung->get_options();
-    $shipping_options = $options["shipping_options"];
+    
+    $shippings = $warung->get_shipping_services();
+    $shipping = '';
+    $city = '';
 
-    //pick the first one for now, we currently dont have the default checkbox in shipping
-    $shipping_name = key(current($shipping_options));
-    // find default shipping city
-    $shipping_cities = $warung->warung_parse_nameval_options($shipping_option[$shipping_name]);
-    $shipping_city = '';
-    foreach ($shipping_cities as $c) {
-        if ($c->default) {
-            $shipping_city = $c->city;
-        }
+    if(count($shippings) == 1) {
+        $shipping = $shippings[0];
     }
 
-    echo "SHIPPINGL:".$shipping_name;
-    echo "SHIPPING CITY:".$shipping_city;
+    $tmp_info = array(
+            'email'=>'',
+            'phone'=>'',
+            'shipping'=>$shipping,
+            'name'=>'',
+            'address'=>'',
+            'city'=>$city,
+            'additional_info'=>''
+    );
 
-    return array("shipping_name"=>$shipping_name, "shipping_city"=> $shipping_city);
-
-}
-
-function updateShippingInfo() {
-    $shipping_name = $_REQUEST["wcart_shipping_name"];
-    $shipping_city = $_REQUEST["wcart_shipping_city"];
-
-
-    $info = getDefaultShippingInfo();
-    if (!isset($_COOKIE["wCartShipping"])) {
-        // create default
-        setcookie("wCartShipping", serialize($info), time()+60*60*24*30);
-    } else {
-        $info = unserialize($_COOKIE[wCartShipping]);
+    
+    if (isset($_SESSION['wCartShipping'])) {
+        $tmp_info = unserialize(stripslashes($_SESSION['wCartShipping']));
+    } else if (isset($_COOKIE['wCartShipping'])) {
+        $tmp_info = unserialize(stripslashes($_COOKIE['wCartShipping']));
     }
 
-    if (isset($_COOKIE["wCartUserInfo"]) && !empty($_COOKIE["wCartUserInfo"])) {
-
-    } else {
-        // create new
-        $info = array("shipping_name"=>$shipping_name, "shipping_city"=> $shipping_city);
-        $_COOKIE["wCartUserInfo"] = $info;
-        //$_SESSION["wCartUserInfo"]
-    }
+    return $tmp_info;
 
 }
 
@@ -161,6 +134,7 @@ function process_params() {
 
         warung_add_to_cart($added_product);
     } if
+
     (isset($_POST['wcart_ordernow'])) {
         $added_product = $warung->warung_get_product_by_id($_POST['product_id']);
         $added_product = formatForSession($added_product, $_POST["product_option"]);
@@ -197,8 +171,9 @@ function get_order_summary($isAdminView=false) {
     ob_start();
 
     $harga_per_kg = -1;
-    if (!empty($_SESSION['wCartShipping'])) {
-        $harga_per_kg = $_SESSION['wCartShipping']['harga_per_kg'];
+    $sh = get_shipping();
+    if (isset($sh['harga_per_kg'])) {
+        $harga_per_kg = $sh['harga_per_kg'];
     }
 
     ?>
@@ -218,7 +193,7 @@ function get_order_summary($isAdminView=false) {
     <table>
             <?
 
-            foreach ($_SESSION['wCartShipping'] as $k=>$v) {
+            foreach ($sh as $k=>$v) {
                 if ($k == 'city') {
                     $arr = explode(';',$v);
                     $v = $arr[0];
@@ -247,7 +222,7 @@ function get_order_summary($isAdminView=false) {
 }
 
 function send_order() {
-    if (!empty($_SESSION['wCart']) && isset($_SESSION['wCartShipping'])) {
+    if (!empty($_SESSION['wCart']) && isset($_COOKIE['wCartShipping'])) {
         //extract($_SESSION['wCartShipping']);
         $to = get_option("admin_email");
         $subject = 'Order '.mt_rand(10, 9999);
@@ -267,7 +242,7 @@ function update_shipping() {
     $arr = explode(';',$scity);
     $info = get_shipping_info($sshipping, $arr[0]);
 
-    $_SESSION['wCartShipping'] = array(
+    $tmp = array(
             'email'=>$semail,
             'phone'=>$sphone,
             'shipping'=>$sshipping,
@@ -277,6 +252,9 @@ function update_shipping() {
             'additional_info'=>$sadditional_info,
             'harga_per_kg'=>$info->harga_per_kg
     );
+
+    $_SESSION['wCartShipping'] = serialize($tmp);
+    setcookie("wCartShipping", serialize($tmp), time()+60*60*24*30); // save 1 month
 
     //var_dump ($_SESSION['wCartShipping']);
 }
@@ -344,30 +322,10 @@ function show_shipping_form() {
     ob_start();
 
     $shippings = $warung->get_shipping_services();
-    $shipping = '';
-    $city = '';
 
-    if(count($shippings) == 1 && empty($_SESSION['wCartShipping']['shipping'])) {
-        $shipping = $shippings[0];
-    }
+    $tmp_info = get_shipping();
+    extract($tmp_info);
 
-    if (!isset($_SESSION['wCartShipping'])) {
-
-        $_SESSION['wCartShipping'] = array(
-                'email'=>'',
-                'phone'=>'',
-                'shipping'=>$shipping,
-                'name'=>'',
-                'address'=>'',
-                'city'=>$city,
-                'additional_info'=>''
-        );
-
-    }
-
-    //var_dump($_SESSION['wCartShipping']);
-
-    extract($_SESSION['wCartShipping']);
 
     $cities=array();
     if (!empty($shipping)) {
@@ -427,50 +385,10 @@ function show_shipping_form() {
     return $ret;
 }
 
-function show_address_form() {
-    ob_start();
-
-    $shippings = get_shipping_options();
-
-    if (isset($_SESSION['wCartShipping'])) {
-
-        extract($_SESSION['wCartShipping']);
-        ?>
-<form method="POST">
-    <div id="shipping_form">
-        <fieldset>
-            <legend>Info pengiriman</legend>
-            <table>
-                <tr><td><label for="">Nama Penerima</label></td><td>&nbsp;</td><td><input type="text" name="name" value="<?=$name?>"/></td></tr>
-                <tr><td><label for="">Alamat</label></td><td>&nbsp;</td><td><textarea name="address" rows="3" cols="150"><?=$address?></textarea></td></tr>
-                <tr><td><label for="">Kota</label></td><td>&nbsp;</td><td>
-                        <select name="city">
-                            <option value="jakarta">Jakarta</option>
-                            <option value="semarang">Semarang</option>
-                        </select></td></tr>
-                <tr><td colspan="2">&nbsp;</td><td><input type="submit" name="submit" value="Kirim"/></td></tr>
-            </table>
-        </fieldset>
-    </div>
-</form>
-        <?
-
-    } else {
-        ?>
-<div>pilih checkout page</div>
-        <?
-    }
-
-    $ret = ob_get_contents();
-    ob_end_clean();
-
-    return $ret;
-
-}
-
 function show_confirmation_form() {
     ob_start();
-    if (isset($_SESSION['wCartShipping'])) {
+    $sh = get_shipping();
+    if (isset($sh)) {
         ?>
 <div style="padding: 10px;">
     <form method="POST" id="wCart_confirmation">
@@ -492,8 +410,9 @@ function get_cart_summary() {
     if (isset($_SESSION["wCart"]) && count($_SESSION["wCart"]) > 0) {
 
         $harga_per_kg = 0;
-        if (!empty($_SESSION['wCartShipping'])) {
-            $harga_per_kg = $_SESSION['wCartShipping']['harga_per_kg'];
+        $sh = get_shipping();
+        if (isset($sh['harga_per_kg'])) {
+            $harga_per_kg = $sh['harga_per_kg'];
         }
 
         $total_weight = 0;
@@ -526,8 +445,9 @@ function show_detailed_cart($showUpdateForm=true) {
     if (isset($_SESSION["wCart"]) && count($_SESSION["wCart"]) > 0) {
 
         $harga_per_kg = -1;
-        if (!empty($_SESSION['wCartShipping'])) {
-            $harga_per_kg = $_SESSION['wCartShipping']['harga_per_kg'];
+        $sh = get_shipping();
+        if (isset($sh['harga_per_kg'])) {
+            $harga_per_kg = $sh['harga_per_kg'];
         }
 
         $current_page = get_permalink();
@@ -569,8 +489,8 @@ function show_detailed_cart($showUpdateForm=true) {
                 <td><?=$warung->formatCurrency($price)?></td>
                 <td><? if ($showUpdateForm) { ?>
                     <input type="text" name="qty_<?=$cart_id?>" value="<?=$quantity?>" size="1"/>
-                <? } else {
-                echo $quantity;
+                                    <? } else {
+                                    echo $quantity;
             } ?>
                 </td>
                 <td><?=$warung->formatCurrency($quantity * $price)?></td>
@@ -583,14 +503,14 @@ function show_detailed_cart($showUpdateForm=true) {
                     if ($showUpdateForm) {
             ?>
             <tr><td colspan="3" class="wcart-td-footer">&nbsp</td><td class="wcart-td-footer"><input type="submit" name="wc_update" value="Update"/></td><td class="wcart-td-footer">&nbsp;</td></tr>
-                        <? } ?>
+            <? } ?>
             <tr><td colspan="4" class="wcart-td-footer">Total Sebelum Ongkos Kirim</td><td class="wcart-td-footer"><?=$warung->formatCurrency($total)?></td></tr>
-        <?
+                    <?
                     if($harga_per_kg != -1) {
-                        ?>
+            ?>
             <tr><td colspan="4" class="wcart-td-footer">Total Setelah Ongkos Kirim</td><td class="wcart-td-footer"><?=$warung->formatCurrency($total+$harga_per_kg*$total_weight)?></td></tr>
                         <?
-        }
+                    }
 
         ?>
         </table>
@@ -599,12 +519,12 @@ function show_detailed_cart($showUpdateForm=true) {
                 <a href="<?=$co_page?>">Kembali Berbelanja</a>&nbsp|&nbsp;<a href="<?=$shipping_page?>">Lanjut ke Pemesanan &gt;&gt;</a>
             </div>
         -->
-        <?
-            if ($showUpdateForm) {
-                ?>
+                <?
+                if ($showUpdateForm) {
+            ?>
     </form>
-            <?
-        }
+                <?
+            }
         ?>
 </div>
         <?
@@ -672,31 +592,34 @@ function warung_update_cart($id, $qtt) {
 }
 
 function warung_add_to_cart($product) {
-    if (!isset($_SESSION["wCart"])) {
-        $_SESSION["wCart"] = array();
-    }
 
-    $exists = false;
-    foreach($_SESSION["wCart"] as $i => $p) {
-        if ($product["cart_id"] == $p['cart_id']) {
-            // increase quantity
-            $p['quantity'] += 1;
-
-            unset($_SESSION["wCart"][$i]);
-            if ($p['quantity'] > 0) {
-                array_push($_SESSION["wCart"],$p);
-            }
-            $exists = true;
-            break;
+    if (!empty($product)) {
+        if (!isset($_SESSION["wCart"])) {
+            $_SESSION["wCart"] = array();
         }
+
+        $exists = false;
+        foreach($_SESSION["wCart"] as $i => $p) {
+            if ($product["cart_id"] == $p['cart_id']) {
+                // increase quantity
+                $p['quantity'] += 1;
+
+                unset($_SESSION["wCart"][$i]);
+                if ($p['quantity'] > 0) {
+                    array_push($_SESSION["wCart"],$p);
+                }
+                $exists = true;
+                break;
+            }
+        }
+
+        if (!$exists) {
+            // add new product
+            array_push($_SESSION["wCart"],$product);
+        }
+
     }
-
-    if (!$exists) {
-        // add new product
-        array_push($_SESSION["wCart"],$product);
-    }
-
-
+    
 }
 
 function warung_empty_cart() {
@@ -718,7 +641,7 @@ function formatForSession($product, $opt_id = -1) {
                 $ret['price'] = $opt->price;
                 $ret["weight"] = $opt->weight;
                 $ret['quantity'] = 1;
-                
+
                 $ret['opt_name'] = $opt->name;
                 $ret['opt_id'] = $opt->id;
             }
@@ -801,25 +724,29 @@ function filter_content($content) {
 <div id="wCart_add_2_cart">
     <form method="POST">
         <input type="hidden" name="product_id" value="<?=$product["id"]?>">
-            <?
-                        if (!empty($product["option_value"])) {
-                            ?>
-        <select name="product_option">
-                <?
-                            foreach($product["option_value"] as $po) {
-                                ?>
-            <option value="<?=$po->id?>"><?=$po->name.'@'.$warung->formatCurrency($po->price)?></option>
                     <?
-                        }
-                        ?>
+                    if (!empty($product["option_value"])) {
+                ?>
+        <select name="product_option">
+                            <?
+                            foreach($product["option_value"] as $po) {
+                                $selected = "";
+                                if (isset($po->default)) {
+                                    $selected='selected="selected"';
+                                }
+                    ?>
+            <option value="<?=$po->id?>" <?=$selected?>><?=$po->name.'@'.$warung->formatCurrency($po->price)?></option>
+                                <?
+                            }
+                ?>
         </select>
-                <?
+                        <?
                     } else {
-                        ?>
+                ?>
         <h2><?=$warung->formatCurrency($product["price"])?></h2>
                         <?
-            }
-            $options = $warung->get_options();
+                    }
+                    $options = $warung->get_options();
             ?>
         <input type="submit" name="add_to_cart" value="<?=$options["add_to_cart"]?>"/>
         <input type="submit" name="wcart_ordernow" value="Pesan Sekarang!"/>
