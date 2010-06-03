@@ -30,8 +30,8 @@ if (class_exists("Warung")) {
     }
     add_action('init', 'warung_init');
     add_action('admin_menu', array(&$warung, 'admin_menu'));
-    add_action('wp_print_scripts', 'init_scripts');
-    add_action('wp_print_styles', 'init_styles');
+    add_action('wp_print_scripts', array(&$warung, 'init_scripts'));
+    add_action('wp_print_styles', array(&$warung, 'init_styles'));
 } else {
     exit ("Class Warung does not exist! Check warung_class exists");
 }
@@ -47,54 +47,13 @@ function warung_init() {
     //var_dump($_SESSION["wCart"]);
 }
 
-function init_scripts() {
-    global $warung;
-    wp_enqueue_script('jquery');
-    wp_enqueue_script('jquery-form');//, $warung->pluginUrl.'scripts/jquery.form.js',array('jquery'));
-    wp_enqueue_script('jquery_validaton', $warung->pluginUrl.'scripts/jquery.validate.js',array('jquery'));
-    wp_enqueue_script('warung_js',$warung->pluginUrl.'scripts/warung.js',array('jquery'));
-}
-function init_styles() {
-    global $warung;
-    wp_enqueue_style('warung_style', $warung->pluginUrl.'style/warung.css');
-}
-
 //######################
 //# USER DATA/SHIPPING #
 //######################
 
-function get_shipping_options($name='') {
-    global $warung;
-    $options = $warung->get_options();
-    $shipping_options = $options["shipping_options"];
-
-    if (!empty ($name)) {
-        return $shipping_options[$name];
-    } else {
-        return $shipping_options;
-    }
-}
-
-function get_shipping_info($shipping_name, $city_name) {
-    $ret;
-    global $warung;
-    if (!empty($shipping_name) && !empty($city_name)) {
-        $cities = get_shipping_options($shipping_name);
-        if (!empty($cities)) {
-            $cities = $warung->warung_parse_nameval_options($cities);
-            foreach ($cities as $c) {
-                if ($c->kota == $city_name) {
-                    $ret = $c;
-                }
-            }
-        }
-    }
-    return $ret;
-}
-
 function get_shipping() {
     global $warung;
-    
+
     $shippings = $warung->get_shipping_services();
     $shipping = '';
     $city = '';
@@ -113,11 +72,20 @@ function get_shipping() {
             'additional_info'=>''
     );
 
-    
+
     if (isset($_SESSION['wCartShipping'])) {
         $tmp_info = unserialize(stripslashes($_SESSION['wCartShipping']));
     } else if (isset($_COOKIE['wCartShipping'])) {
         $tmp_info = unserialize(stripslashes($_COOKIE['wCartShipping']));
+    }
+
+    // --- get this city shipping price etc from options --
+    $sh_info = $warung->get_shipping_info($tmp_info['shipping'], $tmp_info['city']);
+    if (isset($sh_info)) {
+        foreach ($sh_info as $k=>$v) {
+            $tmp_info [$k] = $v;
+        }
+        //var_dump($tmp_info);
     }
 
     return $tmp_info;
@@ -134,6 +102,9 @@ function process_params() {
 
         warung_add_to_cart($added_product);
     } if
+
+
+
 
     (isset($_POST['wcart_ordernow'])) {
         $added_product = $warung->warung_get_product_by_id($_POST['product_id']);
@@ -193,20 +164,25 @@ function get_order_summary($isAdminView=false) {
     <table>
             <?
 
-            foreach ($sh as $k=>$v) {
-                if ($k == 'city') {
-                    $arr = explode(';',$v);
-                    $v = $arr[0];
-                }
-                if (!$isAdminView) {
-                    if ($k == 'harga_per_kg') {
-                        continue;
-                    }
-                }
-        ?>
+            if ($isAdminView) {
+                foreach ($sh as $k=>$v) {
+            ?>
         <tr><td><?=$k?></td><td>&nbsp;:&nbsp;</td><td><?=$v?></td></tr>
+                    <?
+                }
+            } else {
+                extract($sh);
+        ?>
+        <tr><td>Email</td><td>&nbsp;:&nbsp;</td><td><?=$email?></td></tr>
+        <tr><td>Telepon</td><td>&nbsp;:&nbsp;</td><td><?=$phone?></td></tr>
+        <tr><td>Jasa Pengiriman</td><td>&nbsp;:&nbsp;</td><td><?=$shipping?></td></tr>
+        <tr><td>Nama Penerima</td><td>&nbsp;:&nbsp;</td><td><?=$name?></td></tr>
+        <tr><td>Alamat</td><td>&nbsp;:&nbsp;</td><td><?=$address?></td></tr>
+        <tr><td>Kota</td><td>&nbsp;:&nbsp;</td><td><?=$city?></td></tr>
+        <tr><td>Info Tambahan</td><td>&nbsp;:&nbsp;</td><td><?=$additional_info?></td></tr>
                 <?
             }
+
     ?>
     </table>
     <? if (!$isAdminView) { ?>
@@ -237,10 +213,9 @@ function send_order() {
 }
 
 function update_shipping() {
-    extract($_REQUEST);
+    global $warung;
 
-    $arr = explode(';',$scity);
-    $info = get_shipping_info($sshipping, $arr[0]);
+    extract($_REQUEST);
 
     $tmp = array(
             'email'=>$semail,
@@ -250,7 +225,6 @@ function update_shipping() {
             'address'=>$saddress,
             'city'=>$scity,
             'additional_info'=>$sadditional_info,
-            'harga_per_kg'=>$info->harga_per_kg
     );
 
     $_SESSION['wCartShipping'] = serialize($tmp);
@@ -310,7 +284,7 @@ function kv_callback($k, $v) {
 }
 
 function city_callback($k, $v) {
-    $arr = array ('value'=> $v->kota.';'.$v->harga_per_kg, 'name' => $v->kota);
+    $arr = array ('value'=> $v->kota, 'name' => $v->kota);
     if (isset($v->default)) {
         $arr['default'] = true;
     }
@@ -405,31 +379,55 @@ function show_confirmation_form() {
     return $ret;
 }
 
-function get_cart_summary() {
+function get_cart_summary($round_weight=true) {
     $ret = array();
     if (isset($_SESSION["wCart"]) && count($_SESSION["wCart"]) > 0) {
 
-        $harga_per_kg = 0;
+        $harga_per_kg = -1;
+        $free_kg = 0;
+
         $sh = get_shipping();
         if (isset($sh['harga_per_kg'])) {
             $harga_per_kg = $sh['harga_per_kg'];
+        }
+        if (isset($sh['free_kg'])) {
+            $free_kg = $sh['free_kg'];
         }
 
         $total_weight = 0;
         $total_price = 0;
         $total_items = 0;
         $total_ongkir = 0;
+        $total_free_kg = 0;
 
+        $cart_entry = array();
         foreach ($_SESSION["wCart"] as $p) {
             //name|price[|type]
             extract($p);
+            if($round_weight) {
+                $weight = round($weight);
+            }
+
             $total_price += $p['quantity'] * $p['price'];
-            $total_weight += $weight;
+            $total_weight += $p['quantity'] * $weight;
             $total_items += $p['quantity'];
+            if ($free_kg >= $weight) {
+                $total_free_kg += $p['quantity'] * $weight;
+            } else {
+                $total_free_kg += $p['quantity'] * $free_kg;
+            }
+
+            // copy session to temp var
+            $tmp = $p;
+            $tmp['total_price'] = $p['quantity'] * $p['price'];
+
+            array_push($cart_entry, $tmp);
         }
+        sort($cart_entry);
+        $ret['cart_entry']=$cart_entry;
 
         $ret['total_price'] = $total_price;
-        $ret['total_ongkir'] = $total_weight * $harga_per_kg;
+        $ret['total_ongkir'] = ($total_weight - $total_free_kg) * $harga_per_kg;
         $ret['total_items'] = $total_items;
     }
 
@@ -442,24 +440,19 @@ function show_detailed_cart($showUpdateForm=true) {
     ob_start();
 
     // show cart
-    if (isset($_SESSION["wCart"]) && count($_SESSION["wCart"]) > 0) {
 
-        $harga_per_kg = -1;
-        $sh = get_shipping();
-        if (isset($sh['harga_per_kg'])) {
-            $harga_per_kg = $sh['harga_per_kg'];
-        }
+    $cs = get_cart_summary();
+    $cart_entry;
+    if(!empty($cs)) {
+        $cart_entry = $cs['cart_entry'];
+    }
+
+    if (!empty($cart_entry)) {
 
         $current_page = get_permalink();
         $co_page = $warung->get_checkout_url();
         $clear_page = add_parameter($current_page, array("wc_clear"=>"1"));
         $shipping_page = add_parameter($co_page, array("step"=>"2"));
-
-        sort($_SESSION["wCart"]);
-
-        $total_weight = 0;
-        $total = 0;
-        $ongkir = 0;
 
         ?>
 <div><h2>Keranjang Belanja</h2></div>
@@ -475,13 +468,10 @@ function show_detailed_cart($showUpdateForm=true) {
         <table id="wcart-detailed">
             <tr><th>Item</th><th>Berat</th><th>Harga</th><th>Jumlah</th><th>Total</th></tr>
                     <?
-                    foreach ($_SESSION["wCart"] as $p) {
+                    foreach ($cart_entry as $p) {
                         //name|price[|type]
-                        $pr = '';
                         extract($p);
-                        $total += $p['quantity'] * $p['price'];
                         $remove_page = add_parameter($current_page, array("wc_rem"=>$cart_id));
-                        $total_weight += $weight;
             ?>
             <tr>
                 <td><?=$name?></td>
@@ -493,7 +483,7 @@ function show_detailed_cart($showUpdateForm=true) {
                                     echo $quantity;
             } ?>
                 </td>
-                <td><?=$warung->formatCurrency($quantity * $price)?></td>
+                <td><?=$warung->formatCurrency($total_price)?></td>
                 <!--<td><a id="urlbuton" href="<?=$remove_page?>">Remove</a></td>-->
             </tr>
 
@@ -504,15 +494,8 @@ function show_detailed_cart($showUpdateForm=true) {
             ?>
             <tr><td colspan="3" class="wcart-td-footer">&nbsp</td><td class="wcart-td-footer"><input type="submit" name="wc_update" value="Update"/></td><td class="wcart-td-footer">&nbsp;</td></tr>
             <? } ?>
-            <tr><td colspan="4" class="wcart-td-footer">Total Sebelum Ongkos Kirim</td><td class="wcart-td-footer"><?=$warung->formatCurrency($total)?></td></tr>
-                    <?
-                    if($harga_per_kg != -1) {
-            ?>
-            <tr><td colspan="4" class="wcart-td-footer">Total Setelah Ongkos Kirim</td><td class="wcart-td-footer"><?=$warung->formatCurrency($total+$harga_per_kg*$total_weight)?></td></tr>
-                        <?
-                    }
-
-        ?>
+            <tr><td colspan="4" class="wcart-td-footer">Total Sebelum Ongkos Kirim</td><td class="wcart-td-footer"><?=$warung->formatCurrency($cs['total_price'])?></td></tr>
+            <tr><td colspan="4" class="wcart-td-footer">Total Setelah Ongkos Kirim</td><td class="wcart-td-footer"><?=$warung->formatCurrency($cs['total_price']+$cs['total_ongkir'])?></td></tr>
         </table>
         <!--
             <div id="wcart_co">
@@ -619,7 +602,7 @@ function warung_add_to_cart($product) {
         }
 
     }
-    
+
 }
 
 function warung_empty_cart() {
@@ -726,21 +709,36 @@ function filter_content($content) {
         <input type="hidden" name="product_id" value="<?=$product["id"]?>">
                     <?
                     if (!empty($product["option_value"])) {
-                ?>
-        <select name="product_option">
-                            <?
+                        $isRadioOption = false;
+                        if ($isRadioOption) {
                             foreach($product["option_value"] as $po) {
-                                $selected = "";
+                                $checked = "";
                                 if (isset($po->default)) {
-                                    $selected='selected="selected"';
+                                    $checked = "checked=checked";
+                                }
+                        ?><p>
+        <input type="radio" name="product_option" value="<?=$po->id?>" <?=$checked?>/>
+        <?=$po->name.'@'.$warung->formatCurrency($po->price)?>
+                                </p><?
+                            }
+                        } else {
+                    ?>
+
+        <select name="product_option">
+                                <?
+                                foreach($product["option_value"] as $po) {
+                                    $selected = "";
+                                    if (isset($po->default)) {
+                                        $selected='selected="selected"';
+                                    }
+                        ?>
+            <option value="<?=$po->id?>" <?=$selected?>><?=$po->name.'@'.$warung->formatCurrency($po->price)?></option>
+                                    <?
                                 }
                     ?>
-            <option value="<?=$po->id?>" <?=$selected?>><?=$po->name.'@'.$warung->formatCurrency($po->price)?></option>
-                                <?
-                            }
-                ?>
         </select>
-                        <?
+                            <?
+                        }
                     } else {
                 ?>
         <h2><?=$warung->formatCurrency($product["price"])?></h2>

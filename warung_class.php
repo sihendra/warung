@@ -28,6 +28,17 @@ class Warung {
     }
 
 
+    function init_scripts() {
+        wp_enqueue_script('jquery');
+        wp_enqueue_script('jquery-form');//, $warung->pluginUrl.'scripts/jquery.form.js',array('jquery'));
+        wp_enqueue_script('jquery_validaton', $this->pluginUrl.'scripts/jquery.validate.js',array('jquery'));
+        wp_enqueue_script('warung_js',$this->pluginUrl.'scripts/warung.js',array('jquery'));
+    }
+
+
+    function init_styles() {
+        wp_enqueue_style('warung_style', $this->pluginUrl.'style/warung.css');
+    }
 
     function formatCurrency($price) {
 
@@ -86,6 +97,21 @@ class Warung {
         $ret = array();
         foreach ($shipping_options as $k=>$v) {
             array_push($ret, $k);
+        }
+        return $ret;
+    }
+
+    function get_shipping_info($shipping_name, $city_name) {
+        $ret;
+        if (!empty($shipping_name) && !empty($city_name)) {
+            $cities = $this->get_shipping_cities($shipping_name);
+            if (!empty($cities)) {
+                foreach ($cities as $c) {
+                    if ($c->kota == $city_name) {
+                        $ret = $c;
+                    }
+                }
+            }
         }
         return $ret;
     }

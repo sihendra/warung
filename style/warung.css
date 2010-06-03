@@ -86,10 +86,23 @@ root {
  * ## ADD 2 CART ##
 */
 #wCart_add_2_cart {
-
+    width: 100%;
+    clear:both;
 }
 
 /* ###### SUMMARY ##########*/
 #order-summary {
     width: 580px;
+}
+
+/* ### PRODUCT INFO ####*/
+#wcart_pimage {
+
+}
+
+#wcart_pinfo {
+    font-size: 0.8em;
+    font-weight: bold;
+    width: 40%;
+    float: right;
 }
