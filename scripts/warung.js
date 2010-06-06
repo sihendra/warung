@@ -23,14 +23,14 @@ jQuery(document).ready(function() {
         */
 
     });
-
-    jQuery("#wCart_confirmation").validate({
-        submitHandler: function(form) {
-            if (confirm("Apakah data sudah benar?")) {
-                form.submit();
-            }
-        }
-    })
+//
+//    jQuery("#wCart_confirmation").validate({
+//        submitHandler: function(form) {
+//            if (confirm("Apakah data sudah benar?")) {
+//                form.submit();
+//            }
+//        }
+//    })
 });
 
 

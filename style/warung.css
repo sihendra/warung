@@ -68,6 +68,7 @@ root {
 }
 
 #wcart-detailed td {
+    vertical-align: top;
     text-align: right;
     padding: 4px 4px 0px 4px;
     border-bottom: 1px solid;
@@ -82,12 +83,50 @@ root {
     border: none;
 }
 
+#wcart_detailed_nav {
+    padding: 20px 0px 0px 0px;
+}
+
+.wcart_total {
+    color: red;
+}
+
+/* ## CART WIDGET ##*/
+#warung-cart {
+    background-color: green;
+    border: 1px dashed #DDDDDD;
+    -moz-border-radius: 10px 0px 10px 0px;
+    -webkit-border-radius: 10px 0px 10px 0px;
+}
+
+.widgettitle img {
+    width: 16px;
+    height: 16px;
+}
+
 /*
  * ## ADD 2 CART ##
 */
 #wCart_add_2_cart {
     width: 100%;
     clear:both;
+    padding-top: 20px;
+}
+#wCart_add_2_cart select {
+    margin-left: 10px;
+    margin-right: 4px;
+    padding: 3px;
+}
+#wCart_add_2_cart input[type=submit] {
+    background: #C60000;
+    border: 1px solid #DDDDDD;
+    margin-left: 10px;
+}
+
+#wCart_confirmation input[type=submit] {
+    background: green;
+    border: 1px solid #DDDDDD;
+    margin-left: 10px;
 }
 
 /* ###### SUMMARY ##########*/
@@ -97,12 +136,23 @@ root {
 
 /* ### PRODUCT INFO ####*/
 #wcart_pimage {
-
+    float:left;
+    border: 1px dashed;
+    padding: 4px;
 }
 
 #wcart_pinfo {
     font-size: 0.8em;
     font-weight: bold;
     width: 40%;
-    float: right;
+    float: left;
+    padding: 0px 0px 0px 20px;
+}
+
+#wcart_item_thumbnail img {
+    width: 60px;
+    height: 60px;
+    border: 1px dashed;
+    padding: 4px;
+    float: left;
 }

@@ -14,6 +14,11 @@ class Warung {
     // name for our options in the DB
     public static $db_option = 'Warung_Options';
 
+
+    function parse_image_url($post) {
+        
+    }
+
     function Warung() {
         $this->pluginUrl = trailingslashit(WP_PLUGIN_URL.'/'.dirname(plugin_basename(__FILE__)));
     }
@@ -332,6 +337,19 @@ class Warung {
         $product_price = get_post_meta($post_id, '_warung_product_price', true);
         $product_weight = get_post_meta($post_id, '_warung_product_weight', true);
         $product_options_name = get_post_meta($post_id, '_warung_product_options', true);
+        $product_thumbnail = get_post_meta($post_id, 'thumbnail', true);
+
+        $post = get_post($post_id);
+        if (!empty($post) && empty($product_thumbnail)) {
+            $dom = new DOMDocument();
+            if ($dom->loadHTML($post["post_content"])) {
+                $images = $dom->getElementsByTagName("img");
+                foreach ($images as $img) {
+                    $product_thumbnail = $img->getAttribute("src");
+                    break;
+                }
+            }
+        }
 
         if (!empty($product_code)) {
             $ret["id"] = $post_id;
@@ -339,6 +357,7 @@ class Warung {
             $ret["name"] = $product_name;
             $ret["price"] = $product_price;
             $ret["weight"] = $product_weight;
+            $ret["thumbnail"] = $product_thumbnail;
 
             if (!empty($product_options_name)) {
                 $opts = $this->get_options();
