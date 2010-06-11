@@ -438,7 +438,9 @@ function get_cart_summary($round_weight=true) {
         $ret['cart_entry']=$cart_entry;
 
         $ret['total_price'] = $total_price;
-        $ret['total_ongkir'] = ($total_weight - $total_free_kg) * $harga_per_kg;
+        if ($harga_per_kg > -1) {
+            $ret['total_ongkir'] = ($total_weight - $total_free_kg) * $harga_per_kg;
+        }
         $ret['total_items'] = $total_items;
     }
 
@@ -513,7 +515,9 @@ function show_detailed_cart($showUpdateForm=true) {
             <tr><td colspan="3" class="wcart-td-footer">&nbsp</td><td class="wcart-td-footer"><input type="submit" name="wc_update" value="Update" title="Klik tombol ini jika ingin mengupdate jumlah barang"/></td><td class="wcart-td-footer">&nbsp;</td></tr>
             <? } ?>
             <tr><td colspan="4" class="wcart-td-footer">Total Sebelum Ongkos Kirim</td><td class="wcart-td-footer"><span class="wcart_total"><?=$warung->formatCurrency($cs['total_price'])?></span></td></tr>
+            <? if (isset($cs['total_ongkir'])) { ?>
             <tr><td colspan="4" class="wcart-td-footer">Total Setelah Ongkos Kirim</td><td class="wcart-td-footer"><span class="wcart_total"><?=$warung->formatCurrency($cs['total_price']+$cs['total_ongkir'])?></span></td></tr>
+            <? } ?>
         </table>
         
         
