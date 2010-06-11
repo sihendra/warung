@@ -24,6 +24,8 @@ root {
 #wCart_shipping_form .submit {
     margin-left: 155px;
     margin-top: 10px;
+    background: green;
+    border: 1px solid #DDDDDD;
 }
 #wCart_shipping_form label {
     display:block;

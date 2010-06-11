@@ -137,7 +137,7 @@ function process_params() {
     }
 }
 
-function get_order_summary($isAdminView=false) {
+function get_order_summary($isAdminView=false, $isEmailView=false) {
     global $warung;
     ob_start();
 
@@ -149,12 +149,11 @@ function get_order_summary($isAdminView=false) {
 
     ?>
 <div id="order-summary">
-    
         <?
         echo show_detailed_cart(false);
-        if (!$isAdminView) {
+        if (!$isEmailView) {
         ?>
-    <p><a href="<?=$warung->get_checkout_url()?>">Edit</a></p>
+    <p><a href="<?=$warung->get_checkout_url()?>" class="wcart_button_url">Edit</a></p>
             <?
         }
     ?>
@@ -185,11 +184,19 @@ function get_order_summary($isAdminView=false) {
 
     ?>
     </table>
-    <? if (!$isAdminView) { ?>
-    <p><a href="<?=$warung->get_shipping_url()?>">Edit</a></p>
+    <? if (!$isEmailView) { ?>
+    <p><a href="<?=$warung->get_shipping_url()?>" class="wcart_button_url">Edit</a></p>
         <? } ?>
 </div>
     <?
+
+    if ($isEmailView && !$isAdminView) {
+    ?>
+<div>
+    Terima kasih atas pesanan anda. Kami akan segera menghubungi anda tentang ketersediaan barang.
+</div>
+    <?
+    }
 
     $ret = ob_get_contents();
     ob_end_clean();
@@ -197,16 +204,20 @@ function get_order_summary($isAdminView=false) {
     return $ret;
 }
 
-function send_order() {
+function send_order($email_pemesan) {
     if (!empty($_SESSION['wCart']) && isset($_COOKIE['wCartShipping'])) {
         //extract($_SESSION['wCartShipping']);
         $to = get_option("admin_email");
         $subject = 'Order '.mt_rand(10, 9999);
-        $message = get_order_summary(true);
+        $message = get_order_summary(true, true);
         //echo get_order_summary();
         $headers = "Content-type: text/html;\r\n";
         $headers .= "From: Warungsprei.com <info@warungsprei.com>\r\n";
-        return mail($to, $subject, $message, $headers);
+        $ret = mail($to, $subject, $message, $headers);
+
+        mail($email_pemesan, $subject, get_order_summary(false, true), $headers);
+
+        return $ret;
     }
 
     return false;
@@ -345,7 +356,7 @@ function show_shipping_form() {
 
         <div class="wCart_form_row">
             <input type="hidden" name="step" value="2"/>
-            <input type="submit" name="scheckout" class="submit" value="Pesan Sekarang"/>
+            <input type="submit" name="scheckout" class="submit" value="Lanjut"/>
         </div>
 
 
@@ -680,13 +691,13 @@ function filter_content($content) {
                 echo show_detailed_cart();
                 echo show_shipping_form();
             } else if ($step==2) {
-                echo "Jika data sudah benar, klik tombol 'Pesan' di bawah";
+                echo "Jika data sudah benar, klik tombol 'Pesan' di bawah, atau jika masih ada yang salah klik tombol 'Edit' untuk membenarkan";
                 echo get_order_summary();
                 echo show_confirmation_form();
             } else if ($step==3) {
                 $sh = get_shipping();
                 $email_pemesan = $sh['email'];
-                if (send_order()) {
+                if (send_order($email_pemesan)) {
                     
                     ?>
 <div>
