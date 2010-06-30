@@ -101,12 +101,7 @@ function process_params() {
         $added_product = formatForSession($added_product, $_POST["product_option"]);
 
         warung_add_to_cart($added_product);
-    } if
-
-
-
-
-    (isset($_POST['wcart_ordernow'])) {
+    } if (isset($_POST['wcart_ordernow'])) {
         $added_product = $warung->warung_get_product_by_id($_POST['product_id']);
         $added_product = formatForSession($added_product, $_POST["product_option"]);
 
@@ -137,7 +132,7 @@ function process_params() {
     }
 }
 
-function get_order_summary($isAdminView=false, $isEmailView=false) {
+function get_order_summary($isAdminView=false, $isEmailView=false, $v=array()) {
     global $warung;
     ob_start();
 
@@ -191,9 +186,31 @@ function get_order_summary($isAdminView=false, $isEmailView=false) {
     <?
 
     if ($isEmailView && !$isAdminView) {
+        $cs = get_cart_summary();
+
     ?>
 <div>
     Terima kasih atas pesanan anda. Kami akan segera menghubungi anda tentang ketersediaan barang.
+    <br/>
+    <br/>
+    Untuk pembayaran silahkan transfer ke salah satu nomor rekening berikut sebesar <b><?=$warung->formatCurrency($cs['total_price']+$cs['total_ongkir'])?></b>:
+    <ul>
+    <li>BCA: 5800106950 a.n. Hendra Setiawan</li>
+    <li>Mandiri: 1270005578586 a.n. Hendra Setiawan</li>
+    </ul>
+    Tulis '<b><?=$v['order_id']?></b>' sebagai berita.
+    <br/>
+    <br/>
+    Setelah pembayaran dilakukan harap konfirmasi kepada kami dengan me-reply email ini atau menghubungi kami di:
+    <ul>
+        <li>HP: 08888142879, 081808815325 </li>
+        <li>Email: info@warungsprei.com</li>
+        <li>YM: reni_susanto, go_to_hendra</li>
+    </ul>
+    <br/>
+    <br/>
+    Terima Kasih,<br/>
+    Warungsprei.com
 </div>
     <?
     }
@@ -208,14 +225,18 @@ function send_order($email_pemesan) {
     if (!empty($_SESSION['wCart']) && isset($_COOKIE['wCartShipping'])) {
         //extract($_SESSION['wCartShipping']);
         $to = get_option("admin_email");
-        $subject = 'Order '.mt_rand(10, 9999);
-        $message = get_order_summary(true, true);
+        $order_id = mt_rand(10, 9999);
+        $subject = "Order " . $order_id;
+        $message = get_order_summary(true, true, array("order_id"=>$order_id));
         //echo get_order_summary();
         $headers = "Content-type: text/html;\r\n";
         $headers .= "From: Warungsprei.com <info@warungsprei.com>\r\n";
         $ret = mail($to, $subject, $message, $headers);
 
-        mail($email_pemesan, $subject, get_order_summary(false, true), $headers);
+        // send to pemesan
+        mail($email_pemesan, $subject, get_order_summary(false, true, array("order_id"=>$order_id)), $headers);
+        // send to admin juga
+        mail($to, $subject . " (email terkirim ke pelanggan)", get_order_summary(false, true, array("order_id"=>$order_id)), $headers);
 
         return $ret;
     }
@@ -705,8 +726,8 @@ function filter_content($content) {
                     
                     ?>
 <div>
-    <p>Terima kasih, pesanan anda sudah kami terima. Detail pesanan juga kami kirim ke '<?=$email_pemesan?>'.</p>
-    <p>Kami akan segera menghubungi anda tentang informasi pembayaran dan ketersediaan barang.</p>
+    <p>Terima kasih, pesanan anda sudah kami terima. Detail pesanan sudah kami kirim ke '<?=$email_pemesan?>'.</p>
+    <p>Silahkan cek email anda untuk informasi pembayaran.</p>
 </div>
 <div><a href="<?=$home_url?>" class="wcart_button_url">Kembali berbelanja &gt;&gt;</a></div>
                     <?

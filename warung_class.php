@@ -342,7 +342,7 @@ class Warung {
         $post = get_post($post_id);
         if (!empty($post) && empty($product_thumbnail)) {
             $dom = new DOMDocument();
-            if ($dom->loadHTML($post->post_content)) {
+            if (!empty($post->post_content) && $dom->loadHTML($post->post_content)) {
                 $images = $dom->getElementsByTagName("img");
                 foreach ($images as $img) {
                     $product_thumbnail = $img->getAttribute("src");
