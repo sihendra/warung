@@ -57,7 +57,7 @@ class Warung {
         $options = $this->get_options();
         $weight_sign = $options['weight_sign'];
 
-        return number_format($weight,0,',','.').' '.trim($weight_sign);
+        return number_format($weight,1,',','.').' '.trim($weight_sign);
     }
 
     // -------------------------- OPTIONS ------------------------------

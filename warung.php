@@ -138,81 +138,111 @@ function get_order_summary($isAdminView=false, $isEmailView=false, $v=array()) {
 
     $harga_per_kg = -1;
     $sh = get_shipping();
+    $cs = get_cart_summary();
     if (isset($sh['harga_per_kg'])) {
         $harga_per_kg = $sh['harga_per_kg'];
     }
 
-    ?>
-<div id="order-summary">
-        <?
-        echo show_detailed_cart(false);
-        if (!$isEmailView) {
+    if ($isEmailView) {
+        extract($sh);
         ?>
-    <p><a href="<?=$warung->get_checkout_url()?>" class="wcart_button_url">Edit</a></p>
+        <div>
+            <p><?=$name?>, kami sudah menerima pesanan anda. Untuk pembayaran silahkan transfer ke salah satu nomor rekening berikut sebesar <b><?=$warung->formatCurrency($cs['total_price']+$cs['total_ongkir'])?></b>:
+            <ul>
+            <li>BCA: 5800106950 a.n. Hendra Setiawan</li>
+            <li>Mandiri: 1270005578586 a.n. Hendra Setiawan</li>
+            </ul>
+            Tulis '<b><?=$v['order_id']?></b>' sebagai berita.
+            <br/>
+            <br/>
+            Setelah pembayaran dilakukan harap lakukan konfirmasi agar pesanan dapat segera kami proses.
+            Konfirmasi dapat dilakukan dengan cara me-reply email konfirmasi atau menghubungi kami di:
+            <ul>
+                <li>HP: 08888142879, 081808815325 </li>
+                <li>Email: info@warungsprei.com</li>
+                <li>YM: reni_susanto, go_to_hendra</li>
+            </ul>
+            <br/>
+            <br/>
+            Terima Kasih,<br/>
+            Warungsprei.com<br/>
+            -----------------------------------
+            <br/>
             <?
-        }
-    ?>
-    <div><h2>Informasi Pengiriman</h2></div>
+            // ####### show detailed cart
+            echo show_detailed_cart(false);
 
-    <!-- info pelanggan -->
-    <table>
-            <?
-
-            if ($isAdminView) {
-                foreach ($sh as $k=>$v) {
+            // ####### show shipping info
             ?>
-        <tr><td><?=$k?></td><td>&nbsp;:&nbsp;</td><td><?=$v?></td></tr>
-                    <?
+            <!-- info pelanggan -->
+            <div><h2>Informasi Pengiriman</h2></div>
+            <table>
+            <?
+            if ($isAdminView) {
+                // show all info
+                foreach ($sh as $k=>$v) {
+                ?>
+                <tr><td><?=$k?></td><td>&nbsp;:&nbsp;</td><td><?=$v?></td></tr>
+                <?
                 }
             } else {
+                // show limited info
                 extract($sh);
-        ?>
-        <tr><td>Email</td><td>&nbsp;:&nbsp;</td><td><?=$email?></td></tr>
-        <tr><td>Telepon</td><td>&nbsp;:&nbsp;</td><td><?=$phone?></td></tr>
-        <tr><td>Jasa Pengiriman</td><td>&nbsp;:&nbsp;</td><td><?=$shipping?></td></tr>
-        <tr><td>Nama Penerima</td><td>&nbsp;:&nbsp;</td><td><?=$name?></td></tr>
-        <tr><td>Alamat</td><td>&nbsp;:&nbsp;</td><td><?=$address?></td></tr>
-        <tr><td>Kota</td><td>&nbsp;:&nbsp;</td><td><?=$city?></td></tr>
-        <tr><td>Info Tambahan</td><td>&nbsp;:&nbsp;</td><td><?=$additional_info?></td></tr>
+                ?>
+                <tr><td>Email</td><td>&nbsp;:&nbsp;</td><td><?=$email?></td></tr>
+                <tr><td>Telepon</td><td>&nbsp;:&nbsp;</td><td><?=$phone?></td></tr>
+                <tr><td>Jasa Pengiriman</td><td>&nbsp;:&nbsp;</td><td><?=$shipping?></td></tr>
+                <tr><td>Nama Penerima</td><td>&nbsp;:&nbsp;</td><td><?=$name?></td></tr>
+                <tr><td>Alamat</td><td>&nbsp;:&nbsp;</td><td><?=$address?></td></tr>
+                <tr><td>Kota</td><td>&nbsp;:&nbsp;</td><td><?=$city?></td></tr>
+                <tr><td>Info Tambahan</td><td>&nbsp;:&nbsp;</td><td><?=$additional_info?></td></tr>
                 <?
             }
+            ?>
+            </table>
+        </div>
+        <?
+    } else {
+        ?>
+        <div id="order-summary">
+        <?
+            // ####### show cart
+            echo show_detailed_cart(false);
+            ?>
+            <p><a href="<?=$warung->get_checkout_url()?>" class="wcart_button_url">Edit</a></p>
+            <?
 
-    ?>
-    </table>
-    <? if (!$isEmailView) { ?>
-    <p><a href="<?=$warung->get_shipping_url()?>" class="wcart_button_url">Edit</a></p>
-        <? } ?>
-</div>
-    <?
 
-    if ($isEmailView && !$isAdminView) {
-        $cs = get_cart_summary();
-
-    ?>
-<div>
-    Terima kasih atas pesanan anda. Kami akan segera menghubungi anda tentang ketersediaan barang.
-    <br/>
-    <br/>
-    Untuk pembayaran silahkan transfer ke salah satu nomor rekening berikut sebesar <b><?=$warung->formatCurrency($cs['total_price']+$cs['total_ongkir'])?></b>:
-    <ul>
-    <li>BCA: 5800106950 a.n. Hendra Setiawan</li>
-    <li>Mandiri: 1270005578586 a.n. Hendra Setiawan</li>
-    </ul>
-    Tulis '<b><?=$v['order_id']?></b>' sebagai berita.
-    <br/>
-    <br/>
-    Setelah pembayaran dilakukan harap konfirmasi kepada kami dengan me-reply email ini atau menghubungi kami di:
-    <ul>
-        <li>HP: 08888142879, 081808815325 </li>
-        <li>Email: info@warungsprei.com</li>
-        <li>YM: reni_susanto, go_to_hendra</li>
-    </ul>
-    <br/>
-    <br/>
-    Terima Kasih,<br/>
-    Warungsprei.com
-</div>
-    <?
+            // ####### show shipping info
+            ?>
+            <div><h2>Informasi Pengiriman</h2></div>
+            <table>
+            <?
+            if ($isAdminView) {
+                // show all info
+                foreach ($sh as $k=>$v) {
+                ?>
+                <tr><td><?=$k?></td><td>&nbsp;:&nbsp;</td><td><?=$v?></td></tr>
+                <?
+                }
+            } else {
+                // show limited info
+                extract($sh);
+                ?>
+                <tr><td>Email</td><td>&nbsp;:&nbsp;</td><td><?=$email?></td></tr>
+                <tr><td>Telepon</td><td>&nbsp;:&nbsp;</td><td><?=$phone?></td></tr>
+                <tr><td>Jasa Pengiriman</td><td>&nbsp;:&nbsp;</td><td><?=$shipping?></td></tr>
+                <tr><td>Nama Penerima</td><td>&nbsp;:&nbsp;</td><td><?=$name?></td></tr>
+                <tr><td>Alamat</td><td>&nbsp;:&nbsp;</td><td><?=$address?></td></tr>
+                <tr><td>Kota</td><td>&nbsp;:&nbsp;</td><td><?=$city?></td></tr>
+                <tr><td>Info Tambahan</td><td>&nbsp;:&nbsp;</td><td><?=$additional_info?></td></tr>
+                <?
+            }
+            ?>
+            </table>
+            <p><a href="<?=$warung->get_shipping_url()?>" class="wcart_button_url">Edit</a></p>
+        </div>
+        <?
     }
 
     $ret = ob_get_contents();
@@ -221,22 +251,45 @@ function get_order_summary($isAdminView=false, $isEmailView=false, $v=array()) {
     return $ret;
 }
 
-function send_order($email_pemesan) {
+function send_order() {
+
     if (!empty($_SESSION['wCart']) && isset($_COOKIE['wCartShipping'])) {
-        //extract($_SESSION['wCartShipping']);
-        $to = get_option("admin_email");
+        $sh = get_shipping();
+        $email_pemesan = $sh['email'];
+
+        $admin_email = get_option("admin_email");
         $order_id = mt_rand(10, 9999);
-        $subject = "Order " . $order_id;
-        $message = get_order_summary(true, true, array("order_id"=>$order_id));
+        $subject = "Konfirmasi Pemesanan #" . $order_id;
+        $admin_message = get_order_summary(true, true, array("order_id"=>$order_id));
+        $customer_message = get_order_summary(false, true, array("order_id"=>$order_id));
         //echo get_order_summary();
         $headers = "Content-type: text/html;\r\n";
         $headers .= "From: Warungsprei.com <info@warungsprei.com>\r\n";
-        $ret = mail($to, $subject, $message, $headers);
 
-        // send to pemesan
-        mail($email_pemesan, $subject, get_order_summary(false, true, array("order_id"=>$order_id)), $headers);
-        // send to admin juga
-        mail($to, $subject . " (email terkirim ke pelanggan)", get_order_summary(false, true, array("order_id"=>$order_id)), $headers);
+        // send email to admin
+        $ret = mail($admin_email, "[Admin] ".$subject, $admin_message, $headers);
+        // send to pemesan bcc admin
+        $headers .= "Bcc: ".$admin_email."\r\n";
+        mail($email_pemesan, $subject, $customer_message, $headers);
+
+        if ($ret) {
+            ?>
+            <div style="border: 1px dashed; padding: 4px; text-align: center;">
+                <p>Konfirmasi pemesanan juga sudah kami kirim ke <b>'<?=$email_pemesan?>'.</b></p>
+            </div>
+            <?
+            echo $customer_message;
+            ?>
+            <div><br/><br/><a href="<?=$home_url?>" class="wcart_button_url">Kembali berbelanja &gt;&gt;</a></div>
+            <?
+            
+            warung_empty_cart();
+        } else {
+        ?>
+        <span>Maaf kami belum dapat memproses pesanan anda. Silahkan coba beberapa saat lagi. Untuk pemesanan dapat langsung kirim sms ke: 081808815325</span>
+        <?
+        }
+
 
         return $ret;
     }
@@ -411,7 +464,7 @@ function show_confirmation_form() {
     return $ret;
 }
 
-function get_cart_summary($round_weight=true) {
+function get_cart_summary($round_weight=true, $round_harga_per_kg=true) {
     $ret = array();
     if (isset($_SESSION["wCart"]) && count($_SESSION["wCart"]) > 0) {
 
@@ -436,16 +489,17 @@ function get_cart_summary($round_weight=true) {
         foreach ($_SESSION["wCart"] as $p) {
             //name|price[|type]
             extract($p);
-            if($round_weight) {
-                $weight = round($weight);
-            }
-
+            
             $total_price += $p['quantity'] * $p['price'];
             $total_weight += $p['quantity'] * $weight;
             $total_items += $p['quantity'];
+
+            // count free kg
             if ($free_kg >= $weight) {
+                // berat lebih kecil dari free kg
                 $total_free_kg += $p['quantity'] * $weight;
             } else {
+                // berat lebih dari free kg
                 $total_free_kg += $p['quantity'] * $free_kg;
             }
 
@@ -455,15 +509,33 @@ function get_cart_summary($round_weight=true) {
 
             array_push($cart_entry, $tmp);
         }
+        
+        if($round_weight) {
+            $total_weight = round($total_weight);
+            $total_free_kg = round($total_free_kg);
+        }
+
+        if ($round_harga_per_kg) {
+            $harga_per_kg = round($harga_per_kg,-2);
+        }
+
+
         sort($cart_entry);
         $ret['cart_entry']=$cart_entry;
-
+        $ret['total_weight'] = $total_weight;
+        $ret['harga_per_kg'] = $harga_per_kg;
         $ret['total_price'] = $total_price;
+        $ret['total_free_kg'] = $total_free_kg;
         if ($harga_per_kg > -1) {
             $ret['total_ongkir'] = ($total_weight - $total_free_kg) * $harga_per_kg;
+            if ($total_free_kg > 0) {
+                $ret['total_free_ongkir'] = $total_free_kg * $harga_per_kg;
+            }
         }
         $ret['total_items'] = $total_items;
     }
+
+    //var_dump($ret);
 
     return $ret;
 }
@@ -537,6 +609,7 @@ function show_detailed_cart($showUpdateForm=true) {
             <? } ?>
             <tr><td colspan="4" class="wcart-td-footer">Total Sebelum Ongkos Kirim</td><td class="wcart-td-footer"><span class="wcart_total"><?=$warung->formatCurrency($cs['total_price'])?></span></td></tr>
             <? if (isset($cs['total_ongkir'])) { ?>
+            <tr><td colspan="4" class="wcart-td-footer">Ongkos Kirim <?if (isset($cs['total_free_ongkir'])) {?>(bedcover saja, sprei gratis)<?} ?></td><td class="wcart-td-footer"><span class="wcart_total"><?=$warung->formatCurrency($cs['total_ongkir'])?></span></td></tr>
             <tr><td colspan="4" class="wcart-td-footer">Total Setelah Ongkos Kirim</td><td class="wcart-td-footer"><span class="wcart_total"><?=$warung->formatCurrency($cs['total_price']+$cs['total_ongkir'])?></span></td></tr>
             <? } ?>
         </table>
@@ -720,23 +793,7 @@ function filter_content($content) {
                 echo get_order_summary();
                 echo show_confirmation_form();
             } else if ($step==3) {
-                $sh = get_shipping();
-                $email_pemesan = $sh['email'];
-                if (send_order($email_pemesan)) {
-                    
-                    ?>
-<div>
-    <p>Terima kasih, pesanan anda sudah kami terima. Detail pesanan sudah kami kirim ke '<?=$email_pemesan?>'.</p>
-    <p>Silahkan cek email anda untuk informasi pembayaran.</p>
-</div>
-<div><a href="<?=$home_url?>" class="wcart_button_url">Kembali berbelanja &gt;&gt;</a></div>
-                    <?
-                    warung_empty_cart();
-                } else {
-                    ?>
-<span>Maaf kami belum dapat memproses pesanan anda. Silahkan coba beberapa saat lagi.</span>
-                    <?
-                }
+                send_order();
             }
         } else {
             ?>
