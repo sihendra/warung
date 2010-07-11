@@ -152,11 +152,9 @@ function get_order_summary($isAdminView=false, $isEmailView=false, $v=array()) {
             <li>BCA: 5800106950 a.n. Hendra Setiawan</li>
             <li>Mandiri: 1270005578586 a.n. Hendra Setiawan</li>
             </ul>
-            Tulis '<b><?=$v['order_id']?></b>' sebagai berita.
-            <br/>
             <br/>
             Setelah pembayaran dilakukan harap lakukan konfirmasi agar pesanan dapat segera kami proses.
-            Konfirmasi dapat dilakukan dengan cara me-reply email konfirmasi atau menghubungi kami di:
+            Konfirmasi dapat dilakukan dengan cara me-reply email konfirmasi pemesanan ini atau menghubungi kami di:
             <ul>
                 <li>HP: 08888142879, 081808815325 </li>
                 <li>Email: info@warungsprei.com</li>
@@ -251,7 +249,7 @@ function get_order_summary($isAdminView=false, $isEmailView=false, $v=array()) {
     return $ret;
 }
 
-function send_order() {
+function send_order($bccAdmin=false) {
 
     if (!empty($_SESSION['wCart']) && isset($_COOKIE['wCartShipping'])) {
         $sh = get_shipping();
@@ -259,7 +257,7 @@ function send_order() {
 
         $admin_email = get_option("admin_email");
         $order_id = mt_rand(10, 9999);
-        $subject = "Konfirmasi Pemesanan #" . $order_id;
+        $subject = "[Warungsprei.com] Konfirmasi Pemesanan #" . $order_id;
         $admin_message = get_order_summary(true, true, array("order_id"=>$order_id));
         $customer_message = get_order_summary(false, true, array("order_id"=>$order_id));
         //echo get_order_summary();
@@ -269,7 +267,9 @@ function send_order() {
         // send email to admin
         $ret = mail($admin_email, "[Admin] ".$subject, $admin_message, $headers);
         // send to pemesan bcc admin
-        $headers .= "Bcc: ".$admin_email."\r\n";
+        if ($bccAdmin) {
+            $headers .= "Bcc: ".$admin_email."\r\n";
+        }
         mail($email_pemesan, $subject, $customer_message, $headers);
 
         if ($ret) {
