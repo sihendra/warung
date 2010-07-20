@@ -153,8 +153,8 @@ function get_order_summary($isAdminView=false, $isEmailView=false, $v=array()) {
             <li>Mandiri: 1270005578586 a.n. Hendra Setiawan</li>
             </ul>
             <br/>
-            Setelah pembayaran dilakukan harap lakukan konfirmasi agar pesanan dapat segera kami proses.
-            Konfirmasi dapat dilakukan dengan cara me-reply email konfirmasi pemesanan ini atau menghubungi kami di:
+            Setelah pembayaran dilakukan harap lakukan konfirmasi pembayaran agar pesanan dapat segera kami proses.
+            Konfirmasi dapat dilakukan dengan cara me-reply email pemesanan ini atau menghubungi kami di:
             <ul>
                 <li>HP: 08888142879, 081808815325 </li>
                 <li>Email: info@warungsprei.com</li>
@@ -172,6 +172,8 @@ function get_order_summary($isAdminView=false, $isEmailView=false, $v=array()) {
 
             // ####### show shipping info
             ?>
+            <br/>
+            <br/>
             <!-- info pelanggan -->
             <div><h2>Informasi Pengiriman</h2></div>
             <table>
@@ -208,11 +210,9 @@ function get_order_summary($isAdminView=false, $isEmailView=false, $v=array()) {
             echo show_detailed_cart(false);
             ?>
             <p><a href="<?=$warung->get_checkout_url()?>" class="wcart_button_url">Edit</a></p>
-            <?
-
-
-            // ####### show shipping info
-            ?>
+            <br/>
+            <br/>
+            <!--shipping info-->
             <div><h2>Informasi Pengiriman</h2></div>
             <table>
             <?
@@ -257,7 +257,7 @@ function send_order($bccAdmin=false) {
 
         $admin_email = get_option("admin_email");
         $order_id = mt_rand(10, 9999);
-        $subject = "[Warungsprei.com] Konfirmasi Pemesanan #" . $order_id;
+        $subject = "[Warungsprei.com] Pemesanan #" . $order_id;
         $admin_message = get_order_summary(true, true, array("order_id"=>$order_id));
         $customer_message = get_order_summary(false, true, array("order_id"=>$order_id));
         //echo get_order_summary();
@@ -274,13 +274,15 @@ function send_order($bccAdmin=false) {
 
         if ($ret) {
             ?>
-            <div style="border: 1px dashed; padding: 4px; text-align: center;">
-                <p>Konfirmasi pemesanan juga sudah kami kirim ke <b>'<?=$email_pemesan?>'.</b></p>
+            <div class="wcart_info">
+                <p>Informasi pemesanan juga sudah kami kirim ke <b>'<?=$email_pemesan?>'.</b></p>
             </div>
+<div class="wcart_general_container">
             <?
             echo $customer_message;
             ?>
-            <div><br/><br/><a href="<?=$home_url?>" class="wcart_button_url">Kembali berbelanja &gt;&gt;</a></div>
+</div>
+            <div><br/><a href="<?=$home_url?>" class="wcart_button_url">Kembali berbelanja &gt;&gt;</a></div>
             <?
             
             warung_empty_cart();
@@ -394,6 +396,7 @@ function show_shipping_form() {
     $co_page = $warung->get_checkout_url();
 
     ?>
+        <div class="wcart_shipping_container">
 <div><h2>Informasi Pengiriman</h2></div>
 <div id="wCart_shipping_form">
     <form method="POST" name="wCart_shipping_form" id="wCart_shipping_form2">
@@ -436,6 +439,7 @@ function show_shipping_form() {
 
     </form>
 </div>
+        </div>
     <?
 
     $ret = ob_get_contents();
@@ -553,6 +557,10 @@ function show_detailed_cart($showUpdateForm=true) {
         $cart_entry = $cs['cart_entry'];
     }
 
+    ?>
+<div class="wcart_detailed_cart_container">
+    <?
+
     if (!empty($cart_entry)) {
 
         $current_page = get_permalink();
@@ -632,7 +640,7 @@ function show_detailed_cart($showUpdateForm=true) {
     } else {
         echo '<p id="status">Kosong</p>';
     }
-
+?></div><?
     $ret = ob_get_contents();
     ob_end_clean();
 
@@ -731,7 +739,7 @@ function formatForSession($product, $opt_id = -1) {
     $ret = array();
 
     if (!empty($product)) {
-        if ($opt_id != -1) {
+        if (isset($opt_id) && $opt_id != -1) {
             $opt = $warung->warung_get_selected_option($product, $opt_id);
             if (!empty($opt)) {
                 $ret["cart_id"] = $product["id"].'-'.$opt->id;
@@ -786,12 +794,16 @@ function filter_content($content) {
 
         if (!empty($_SESSION['wCart'])) {
             if ($step==1) {
+                ?><div class="wcart_general_container"><?
                 echo show_detailed_cart();
                 echo show_shipping_form();
+                ?></div><?
             } else if ($step==2) {
+                ?><div class="wcart_general_container"><?
                 echo "Jika data sudah benar, klik tombol 'Pesan' di bawah, atau jika masih ada yang salah klik tombol 'Edit' untuk membenarkan";
                 echo get_order_summary();
                 echo show_confirmation_form();
+                ?></div><?
             } else if ($step==3) {
                 send_order();
             }
