@@ -131,6 +131,14 @@ root {
     margin-left: 10px;
 }
 
+.wcart_price {
+    background-color: green;
+    color: white;
+    border: 1px solid #DDDDDD;
+    width: 260px;
+    font-weight: bold;
+}
+
 /* ###### SUMMARY ##########*/
 #order-summary {
     width: 580px;

@@ -77,7 +77,11 @@ class Warung {
     }
 
     function get_shipping_url() {
-        add_parameter($this->get_checkout_url(), array("step"=>2));
+        return add_parameter($this->get_checkout_url(), array("step"=>2));
+    }
+
+    function get_order_url() {
+        return add_parameter($this->get_checkout_url(), array("step"=>3));
     }
 
 
@@ -131,12 +135,10 @@ class Warung {
 
         if (! empty ($shipping_options) && ! empty ($cities)) {
 
-            $cities = Utils::parseJsonMultiline($cities, false);
-            $services = Utils::parseJsonMultiline($services, false);
+            $c = Utils::parseJsonMultiline($cities, false);
+            $s = Utils::parseJsonMultiline($shipping_options, false);
 
-            var_dump($cities);
-
-            $ret = new Shipping($cities, $services);
+            $ret = new Shipping($c, $s);
         }
 
         return $ret;
@@ -267,6 +269,7 @@ class Warung {
         $product_weight = get_post_meta($post_id, '_warung_product_weight', true);
         $product_options_name = get_post_meta($post_id, '_warung_product_options', true);
         $product_thumbnail = get_post_meta($post_id, 'thumbnail', true);
+        $product_weight_discount = get_post_meta($post_id, '_warung_product_weight_discount', true);
 
         $post = get_post($post_id);
         if (!empty($post) && empty($product_thumbnail)) {
@@ -301,6 +304,11 @@ class Warung {
                     }
                 }
             }
+
+            if (!empty($product_weight_discount)) {
+                $ret["weight_discount"] = $product_weight_discount;
+            }
+
         }
 
         return $ret;
@@ -351,6 +359,7 @@ class Warung {
         $prod_price = $_POST['product_price'];
         $prod_weight = $_POST['product_weight'];
         $prod_options = $_POST['product_options'];
+        $prod_weight_discount = $_POST['product_weight_discount'];
 
         if (!empty($prod_code) && !empty($prod_name)) {
             update_post_meta($post_id, '_warung_product_code', $prod_code);
@@ -363,6 +372,7 @@ class Warung {
             }
             update_post_meta($post_id, '_warung_product_price', $prod_price);
             update_post_meta($post_id, '_warung_product_weight', $prod_weight);
+            update_post_meta($post_id, '_warung_product_weight_discount', $prod_weight_discount);
             if ($prod_options != '-- none --') {
                 update_post_meta($post_id, '_warung_product_options', $prod_options);
             } else {
@@ -403,7 +413,10 @@ class Warung {
 
 
         <label for="product_weight">Weight</label>
-        <input type="text" name="product_weight" value="'.$product["weight"].'"/><br/>';
+        <input type="text" name="product_weight" value="'.$product["weight"].'"/><br/>
+
+        <label for="product_weight_discount">Weight Discount</label>
+        <input type="text" name="product_weight_discount" value="'.$product["weight_discount"].'"/><br/>';
 
         // get from option
         $prod_options = $this->get_options();
@@ -524,12 +537,29 @@ class Utils {
 
         return $ret;
     }
+
+    public static function ceilToThousand($n) {
+        return Utils::ceilTo($n, 1000);
+    }
+
+    public static function ceilToHundred($n) {
+        return Utils::ceilTo($n, 100);
+    }
+
+    public static function ceilTo($n,$rf) {
+        
+        if ($n/$rf > 1) {
+            return ceil($n/$rf) * $rf;
+        }
+        return $n;
+    }
+
 }
 
 class Shipping {
 
-    private $cities;
-    private $services;
+    private $ct;
+    private $srv;
 
     /**
      *
@@ -541,23 +571,21 @@ class Shipping {
      *                          {name: lorena; city_id:1; city_name:Bogor; min_weight:2; price:6000; free_weight:1.5}
      *                        ]
      */
-    public function  __construct($cities, $services) {
-        var_dump($cities);
-        $this->cities = $cites;
-        $this->services = $services;
-        var_dump($this->cities);
+    public function __construct($cities, $services) {
+        $this->ct = &$cities;
+        $this->srv = &$services;
     }
 
     public function getCities() {
-        return $this->cities;
+        return $this->ct;
     }
 
     public function getServices() {
-        return $this->services;
+        return $this->srv;
     }
 
     public function getDefaultCity() {
-        foreach ($this->cities as $city) {
+        foreach ($this->ct as $city) {
             if (isset($city->default)) {
                 return $city;
             }
@@ -565,9 +593,18 @@ class Shipping {
         return null;
     }
 
+    public function getCityById($cityId) {
+        foreach ($this->ct as $city) {
+            if ($city->id == $cityId) {
+                return $city;
+            }
+        }
+    }
+
     public function getServiceByCityAndWeight($cityId, $weight) {
         $ret = array();
-        foreach ($this->services as $service) {
+       
+        foreach ($this->srv as $service) {
             if ($service->city_id == $cityId && $weight >= $service->min_weight) {
                 array_push($ret, $service);
             }
@@ -578,7 +615,9 @@ class Shipping {
     public function getCheapestServices($cityId, $weight) {
         $ret = null;
 
+        //echo 'getCheapestServices('.$cityId.','.$weight.')';
         $serv = $this->getServiceByCityAndWeight($cityId, $weight);
+
         if (! empty ($serv)) {
             foreach ($serv as $service) {
                 if ($ret == null) {
@@ -590,6 +629,8 @@ class Shipping {
                 }
             }
         }
+
+        return $ret;
 
     }
 }
