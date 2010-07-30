@@ -351,8 +351,8 @@ function form_selected ($selname, $value) {
     return '';
 }
 
-function form_select($name, $arr, $selected, $callback='', $isArrayOfObject=false) {
-    $ret = '<select name="'.$name.'"><option value="--- Please Select One ---">--- Please Select One ---</option>';
+function form_select($name, $arr, $selected, $callback='', $isArrayOfObject=false, $style='') {
+    $ret = '<select id="'.$name.'" name="'.$name.'" '.$style.'><option value="--- Please Select One ---">--- Please Select One ---</option>';
     if (empty($callback)) {
         foreach ($arr as $k=>$v) {
             $ret .= '<option value="'.$k.'" '.form_selected($selected, $k).'>'.$v.'</option>';
@@ -819,6 +819,7 @@ function filter_content($content) {
     global $warung;
 
     $co_page = $warung->get_checkout_page();
+    $shipping_sim_page = $warung->get_shipping_simulation_page();
     $home_url = get_option("home");
 
     ob_start();
@@ -852,6 +853,71 @@ function filter_content($content) {
             <?
         }
         $content = ob_get_contents();
+
+    } else if ( $post->ID == $shipping_sim_page) {
+        $s = $warung->get_shipping_options();
+        if ( !empty($s) ) {
+            $cities=array();
+            $cities = $s->getCities();
+            $city = $_REQUEST["wc_sim_city"];
+            $wc_weight = $_REQUEST["wc_sim_weight"];
+            if (empty($wc_weight)) {
+                $wc_weight = 1;
+            }
+
+            $resp = array();
+            if (isset($_REQUEST["wc_sim_city"])) {
+                $s_cid = $_REQUEST["wc_sim_city"];
+                $s_weight = $_REQUEST["wc_sim_weight"];
+                $s_cheap = $s->getCheapestServices($s_cid, $s_weight);
+                if (! empty ($s_cheap)) {
+                    array_push($resp, '<strong>'.$s_cheap->name.': '.$warung->formatCurrency(Utils::ceilToHundred($s_cheap->price) * $s_weight).' ('.$warung->formatCurrency(Utils::ceilToHundred($s_cheap->price)). '/Kg) (paling murah)</strong>');
+                }
+                $s_serv = $s->getServiceByCityAndWeight($s_cid, $s_weight);
+                foreach ($s_serv as $sss) {
+                   if ($sss != $s_cheap) {
+                       array_push($resp, $sss->name.': '.$warung->formatCurrency(Utils::ceilToHundred($sss->price) * $s_weight).' ('.$warung->formatCurrency(Utils::ceilToHundred($sss->price)). '/Kg)');
+                   }
+                }
+            }
+
+
+            ?>
+            <?
+            if (! empty($resp)) {
+                ?>
+        <div class="wcart_info">
+                <?
+                foreach ($resp as $r) {
+                    ?><?=$r?><br/><?
+                }
+                ?>
+        </div>
+                <?
+            }?>
+        <div id="wCart_shipping_form" >
+            
+            <form action="" method="POST">
+                <div class="wCart_form_row">
+                    <label for="wc_sim_city">Kota Tujuan</label>
+                    <?=form_select('wc_sim_city', $cities, $city, 'city_callback', true)?>
+                </div>
+                <div class="wCart_form_row">
+                    <label for="wc_sim_weight">Berat (Kg)</label>
+                    <input id="wc_sim_weight" type="text" name="wc_sim_weight" value="<?=$wc_weight?>"/>
+                </div>
+                <div class="wCart_form_row">
+                    <label for="wc_sim_weight">&nbsp;</label>
+                    <input type="submit" value="Cek Ongkos Kirim"/>
+                </div>
+            </form>
+        </div>
+            <?
+        } else {
+
+        }
+
+        $content .= ob_get_contents();
     } else {
         // check is this post contains product informations
 
