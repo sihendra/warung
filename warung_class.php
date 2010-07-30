@@ -80,46 +80,6 @@ class Warung {
         add_parameter($this->get_checkout_url(), array("step"=>2));
     }
 
-    function get_shipping_options() {
-        $options = $this->get_options();
-        $shipping_options = $options["shipping_options"];
-        return $shipping_options;
-    }
-
-    function get_shipping_cities($shipping_name) {
-        $shipping_options = $this->get_shipping_options();
-
-        if (!empty ($shipping_name)) {
-            $cities = $shipping_options[$shipping_name];
-            if (!empty($cities)) {
-                return $this->warung_parse_nameval_options($cities);
-            }
-        }
-    }
-
-    function get_shipping_services() {
-        $shipping_options = $this->get_shipping_options();
-        $ret = array();
-        foreach ($shipping_options as $k=>$v) {
-            array_push($ret, $k);
-        }
-        return $ret;
-    }
-
-    function get_shipping_info($shipping_name, $city_name) {
-        $ret;
-        if (!empty($shipping_name) && !empty($city_name)) {
-            $cities = $this->get_shipping_cities($shipping_name);
-            if (!empty($cities)) {
-                foreach ($cities as $c) {
-                    if ($c->kota == $city_name) {
-                        $ret = $c;
-                    }
-                }
-            }
-        }
-        return $ret;
-    }
 
     function get_options() {
 
@@ -134,8 +94,9 @@ class Warung {
                 'add_to_cart' => 'Add to Cart',
                 'checkout_page' => $def_page,
                 'prod_options' => array(),
-                'shipping_options' => array(),
-                'weight_sign' => 'Kg'
+                'shipping_options' => '',
+                'weight_sign' => 'Kg',
+                'shipping_cities' => ''
         );
 
 
@@ -162,68 +123,29 @@ class Warung {
         return $options;
     }
 
-    function parse_product_options($posts) {
-        $ret = array();
+    function get_shipping_options() {
+        $options = $this->get_options();
+        $shipping_options = $options["shipping_options"];
+        $cities = $options["shipping_cities"];
+        $ret = null;
 
-        $prev_idx = 0;
-        $prev_name = '';
-        foreach ($posts as $key=>$val) {
+        if (! empty ($shipping_options) && ! empty ($cities)) {
 
-            if (!empty ($val)) {
-                if (strpos($key,'prod_option_name') !== false) {
-                    $tok = explode('-', $key);
-                    $prev_idx = $tok[1];
-                    $prev_name = $val;
+            $cities = Utils::parseJsonMultiline($cities, false);
+            $services = Utils::parseJsonMultiline($services, false);
 
-                } else if (strpos($key, 'prod_option_value') !== false) {
+            var_dump($cities);
 
-                    if (strlen(trim($prev_name)) > 0) {
-                        $ret[$prev_name] = $val;
-                    }
-                }
-            }
-
-        }
-
-        return $ret;
-    }
-
-    /**
-     * Parse all input element with name $name_form_name and value $value_form_name into assoc array
-     * example product_options_name-1="sprei" product_option_value-1="123"
-     * will be parsed into array ( sprei => 123 )
-     *
-     * @param <type> $posts
-     * @param <type> $name_form_name
-     * @param <type> $value_form_name
-     * @return <type>
-     */
-    function parse_nameval_options($posts, $name_form_name, $value_form_name) {
-        $ret = array();
-
-        $prev_idx = 0;
-        $prev_name = '';
-        foreach ($posts as $key=>$val) {
-
-            if (!empty ($val)) {
-                if (strpos($key,$name_form_name) !== false) {
-                    $tok = explode('-', $key);
-                    $prev_idx = $tok[1];
-                    $prev_name = $val;
-
-                } else if (strpos($key, $value_form_name) !== false) {
-                    if (strlen(trim($prev_name)) > 0) {
-                        $ret[$prev_name] = $val;
-                    }
-                }
-            }
-
+            $ret = new Shipping($cities, $services);
         }
 
         return $ret;
     }
 
     function handle_options() {
+
+        ob_start();
+
         $options = $this->get_options();
 
         if (isset($_POST['submitted'])) {
@@ -234,8 +156,9 @@ class Warung {
                 $options['currency'] = $_POST['currency'];
                 $options['add_to_cart'] = $_POST['add_to_cart'];
                 $options['checkout_page'] = $_POST['checkout_page'];
-                $options['prod_options']=$this->parse_nameval_options($_POST,'prod_option_name','prod_option_value');
-                $options['shipping_options']=$this->parse_nameval_options($_POST, 'shipping_option_name', 'shipping_option_value');
+                $options['prod_options']=Utils::parseNamevalParameters($_POST,'prod_option_name','prod_option_value');
+                $options['shipping_cities']=$_POST['shipping_cities'];
+                $options['shipping_options']=$_POST['shipping_options'];
                 $options['weight_sign'] = $_POST['weight_sign'];
 
                 update_option($this->db_option, $options);
@@ -250,73 +173,79 @@ class Warung {
         $add2cart = $options['add_to_cart'];
         $checkout_page = $options['checkout_page'];
         $prod_options = $options['prod_options'];
+        $shipping_cities = $options['shipping_cities'];
         $shipping_options = $options['shipping_options'];
         $weight_sign = $options['weight_sign'];
 
-        echo
-        '<div class="wrap" style="max-width:950px !important;">
-                <h2>Warung</h2>
-                <div id="poststuff" style="margin-top:10px;">
-                    <div id="mainblock" style="width:710px">
-                        <div class="dbx-content">
-                            <form action="" method="post">
-                            '.wp_nonce_field('warung-nonce').'
-                                <label for="currency">Currency</label>
-                                <input id="currency" type="text" size="5" name="currency" value="'.stripslashes($currency).'"/><br/>
-                                <label for="weight_sign">Weight Sign</label>
-                                <input id="weight_sign" type="text" size="5" name="weight_sign" value="'.stripslashes($weight_sign).'"/><br/>
-                                <label for="add_to_cart">Add to cart text</label>
-                                <input id="add_to_cart" type="text" size="10" name="add_to_cart" value="'.stripslashes($add2cart).'"/><br/>
-                                <label for="checkout_page">Checkout Page</label>
-                                <select id="checkout_page" name="checkout_page"/>';
-        foreach (get_pages() as $page) {
-            echo '<option value="'.$page->ID.'"'.($checkout_page == $page->ID ? '"selected=selected"':'').'>'.$page->post_title.'</option>';
-        }
-        echo '</select><br/>
-                                <h2>Product Options Set</h2>';
-        $i = 0;
-        if (is_array($prod_options)) {
-            foreach ($prod_options as $name=>$pos) {
-                echo '<label for="prod_option_name-'.$i.'">Name</label>';
-                echo '<input type="text" id="prod_option_name-'.$i.'" name="prod_option_name-'.$i.'" value="'.stripslashes($name).'" />';
-                echo '<label for="prod_option_value-'.$i.'">Value</label>';
-                echo '<textarea id="prod_option_value-'.$i.'" name="prod_option_value-'.$i.'" rows="5" cols="50">'.stripslashes($pos).'</textarea>';
-                echo '<br/>';
-                $i++;
-            }
-        }
-
-        echo '<label for="prod_option_name-'.$i.'">Name</label>';
-        echo '<input type="text" id="prod_option_name-'.$i.'" name="prod_option_name-'.$i.'" value="" />';
-        echo '<label for="prod_option_value-'.$i.'">Value</label>';
-        echo '<textarea name="prod_option_value-'.$i.'" id="prod_option_value-'.$i.'" rows="5" cols="50"></textarea>';
-
-        // tiki, dll
-        echo '<h2>Shipping Options</h2>';
-        $i = 0;
-        if (is_array($shipping_options)) {
-            foreach ($shipping_options as $name=>$pos) {
-                echo '<label for="shipping_option_name-'.$i.'">Name</label>';
-                echo '<input type="text" id="shipping_option_name-'.$i.'" name="shipping_option_name-'.$i.'" value="'.stripslashes($name).'" />';
-                echo '<label for="shipping_option_value-'.$i.'">Value</label>';
-                echo '<textarea id="shipping_option_value-'.$i.'" name="shipping_option_value-'.$i.'" rows="5" cols="50">'.stripslashes($pos).'</textarea>';
-                echo '<br/>';
-                $i++;
-            }
-        }
-
-        echo '<label for="shipping_option_name-'.$i.'">Name</label>';
-        echo '<input type="text" id="shipping_option_name-'.$i.'" name="shipping_option_name-'.$i.'" value="" />';
-        echo '<label for="shipping_option_value-'.$i.'">Value</label>';
-        echo '<textarea name="shipping_option_value-'.$i.'" id="shipping_option_value-'.$i.'" rows="5" cols="50"></textarea>';
+        ?>
+        <div class="wrap" style="max-width:950px !important;">
+            <h2>Warung</h2>
+            <div id="poststuff" style="margin-top:10px;">
+                <div id="mainblock" style="width:810px">
+                    <div class="dbx-content">
+                        <form action="" method="post">
+                            <?=wp_nonce_field('warung-nonce')?>
+                            <label for="currency">Currency</label>
+                            <input id="currency" type="text" size="5" name="currency" value="<?=stripslashes($currency)?>"/><br/>
+                            <label for="weight_sign">Weight Sign</label>
+                            <input id="weight_sign" type="text" size="5" name="weight_sign" value="<?=stripslashes($weight_sign)?>"/><br/>
+                            <label for="add_to_cart">Add to cart text</label>
+                            <input id="add_to_cart" type="text" size="10" name="add_to_cart" value="<?=stripslashes($add2cart)?>"/><br/>
+                            <label for="checkout_page">Checkout Page</label>
+                            <select id="checkout_page" name="checkout_page">
+                            <?
+                            foreach (get_pages() as $page) {
+                                echo '<option value="'.$page->ID.'"'.($checkout_page == $page->ID ? '"selected=selected"':'').'>'.$page->post_title.'</option>';
+                            }
+                            ?>
+                            </select><br/>
+                            <h2>Product Options Set</h2>
+                            <?
+                            $i = 0;
+                            if (is_array($prod_options)) {
+                                foreach ($prod_options as $name=>$pos) {
+                                    ?>
+                            <label for="prod_option_name-<?=$i?>">Name</label>
+                            <input type="text" id="prod_option_name-<?=$i?>" name="prod_option_name-<?=$i?>" value="<?=stripslashes($name)?>" />
+                            <label for="prod_option_value-<?=$i?>">Value</label>
+                            <textarea id="prod_option_value-<?=$i?>" name="prod_option_value-<?=$i?>" rows="5" cols="50"><?=stripslashes($pos)?></textarea>
+                            <br/>
+                                    <?
+                                    $i++;
+                                }
+                            }
+                            ?>
+                            <label for="prod_option_name-<?=$i?>">Name</label>
+                            <input type="text" id="prod_option_name-<?=$i?>" name="prod_option_name-<?=$i?>" value="" />
+                            <label for="prod_option_value-<?=$i?>">Value</label>
+                            <textarea name="prod_option_value-<?=$i?>" id="prod_option_value-<?=$i?>" rows="5" cols="50"></textarea>
 
 
-        echo '<div class="submit"><input type="submit" name="submitted" value="Update" /></div>
-                            </form>
-                        </div>
+                            <h2>Shipping Cities</h2>
+                            <label for="shipping_cities">Cities</label>
+                            <textarea id="shipping_cities" name="shipping_cities" rows="5" cols="50"><?=stripslashes($shipping_cities)?></textarea>
+                            <br/>
+
+
+                            <h2>Shipping Services</h2>
+                            <label for="shipping_options">Shipping Services</label>
+                            <textarea id="shipping_options" name="shipping_options" rows="5" cols="50"><?=stripslashes($shipping_options)?></textarea>
+                            <br/>
+
+
+                            <div class="submit"><input type="submit" name="submitted" value="Update" /></div>
+                        </form>
                     </div>
                 </div>
-            </div>';
+            </div>
+        </div>
+
+        <?
+
+        $out = ob_get_contents();
+        ob_end_clean();
+
+        echo $out;
     }
 
     function admin_menu() {
@@ -367,7 +296,7 @@ class Warung {
                     foreach($prod_opts as $k=>$v) {
                         if ($k == $product_options_name) {
                             $ret["option_name"]=$product_options_name;
-                            $ret["option_value"] = $this->warung_parse_nameval_options($v);
+                            $ret["option_value"] = Utils::parseJsonMultiline($v);
                         }
                     }
                 }
@@ -498,29 +427,6 @@ class Warung {
 
     }
 
-    function warung_parse_product_options($content) {
-        $content = str_replace('\\"', '"', $content);
-
-        $ret = explode("\n", $content);
-        foreach($ret as &$r) {
-            $r = '{'.$r.'}';
-            $r = json_decode($r);
-        }
-        return $ret;
-    }
-
-    function warung_parse_nameval_options($content) {
-        $content = str_replace('\\"', '"', $content);
-
-        $ret = explode("\n", $content);
-        $i=0;
-        foreach($ret as &$r) {
-            $r = '{"id":'.$i++.','.$r.'}';
-            $r = json_decode($r);
-        }
-        return $ret;
-    }
-
     function display_meta() {
         foreach ( array( 'normal', 'advanced', 'side' ) as $context ) {
             remove_meta_box( 'postcustom', 'post', $context );
@@ -531,7 +437,40 @@ class Warung {
     }
 
     //-- util
-    function add_parameter($url, $param) {
+    
+}
+
+class Utils {
+
+    /**
+     * Parse multiline json string into json object array
+     * @param String $s_content json string
+     * @param Boolean $b_generate_id if set to true 'id' properties will be added with autogenerated values for each json object
+     * @return Array of json object 
+     */
+    public static function parseJsonMultiline($s_content, $b_generate_id=true) {
+        $s_content = str_replace('\\"', '"', $s_content);
+
+        $a_ret = explode("\n", $s_content);
+        $i=0;
+        foreach($a_ret as &$r) {
+            if ($b_generate_id) {
+                $r = '{"id":'.$i++.','.$r.'}';
+            } else {
+                $r = '{'.$r.'}';
+            }
+            $r = json_decode($r);
+        }
+        return $a_ret;
+    }
+
+    /**
+     * Append url with get parameters in $param
+     * @param String $url
+     * @param Associative Arrays $param
+     * @return String $url with appended parameter
+     */
+    public static function addParameter($url, $param) {
         $ret=$url;
         $qstr='';
         $i=0;
@@ -549,6 +488,109 @@ class Warung {
         }
 
         return $ret;
+    }
+
+    /**
+     * Parse all input element with name $name_form_name and value $value_form_name into assoc array
+     * example product_options_name-1="sprei" product_option_value-1="123"
+     * will be parsed into array ( sprei => 123 )
+     *
+     * @param <type> $posts
+     * @param <type> $name_form_name
+     * @param <type> $value_form_name
+     * @return Assoc Array
+     */
+    public static function parseNamevalParameters($posts, $name_form_name, $value_form_name) {
+        $ret = array();
+
+        $prev_idx = 0;
+        $prev_name = '';
+        foreach ($posts as $key=>$val) {
+
+            if (!empty ($val)) {
+                if (strpos($key,$name_form_name) !== false) {
+                    $tok = explode('-', $key);
+                    $prev_idx = $tok[1];
+                    $prev_name = $val;
+
+                } else if (strpos($key, $value_form_name) !== false) {
+                    if (strlen(trim($prev_name)) > 0) {
+                        $ret[$prev_name] = $val;
+                    }
+                }
+            }
+
+        }
+
+        return $ret;
+    }
+}
+
+class Shipping {
+
+    private $cities;
+    private $services;
+
+    /**
+     *
+     * @param Array $cities [{id:1; name:Jakarta}, {id:2; name:Bogor}]
+     * @param Array $services [
+     *                          {name: pandusiwi; city_id:1; city_name:Jakarta; min_weight:0; price:7000; free_weight:1.5},
+     *                          {name: pandusiwi; city_id:1; city_name:Bogor; min_weight:0; price:9000; free_weight:1.5},
+     *                          {name: lorena; city_id:1; city_name:Jakarta; min_weight:2; price:5000; free_weight:1.5},
+     *                          {name: lorena; city_id:1; city_name:Bogor; min_weight:2; price:6000; free_weight:1.5}
+     *                        ]
+     */
+    public function  __construct($cities, $services) {
+        var_dump($cities);
+        $this->cities = $cites;
+        $this->services = $services;
+        var_dump($this->cities);
+    }
+
+    public function getCities() {
+        return $this->cities;
+    }
+
+    public function getServices() {
+        return $this->services;
+    }
+
+    public function getDefaultCity() {
+        foreach ($this->cities as $city) {
+            if (isset($city->default)) {
+                return $city;
+            }
+        }
+        return null;
+    }
+
+    public function getServiceByCityAndWeight($cityId, $weight) {
+        $ret = array();
+        foreach ($this->services as $service) {
+            if ($service->city_id == $cityId && $weight >= $service->min_weight) {
+                array_push($ret, $service);
+            }
+        }
+        return $ret;
+    }
+
+    public function getCheapestServices($cityId, $weight) {
+        $ret = null;
+
+        $serv = $this->getServiceByCityAndWeight($cityId, $weight);
+        if (! empty ($serv)) {
+            foreach ($serv as $service) {
+                if ($ret == null) {
+                    $ret = $service;
+                } else {
+                    if ($ret->price > $service->price) {
+                        $ret = $service;
+                    }
+                }
+            }
+        }
+
     }
 }
 ?>

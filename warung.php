@@ -54,24 +54,21 @@ function warung_init() {
 function get_shipping() {
     global $warung;
 
-    $shippings = $warung->get_shipping_services();
-    $shipping = '';
     $city = '';
+    $shippings = $warung->get_shipping_options();
 
-    if(count($shippings) == 1) {
-        $shipping = $shippings[0];
+    if (! empty($shippings)) {
+        $city = $shippings->getDefaultCity();
     }
 
     $tmp_info = array(
             'email'=>'',
             'phone'=>'',
-            'shipping'=>$shipping,
             'name'=>'',
             'address'=>'',
             'city'=>$city,
             'additional_info'=>''
     );
-
 
     if (isset($_SESSION['wCartShipping'])) {
         $tmp_info = unserialize(stripslashes($_SESSION['wCartShipping']));
@@ -79,14 +76,14 @@ function get_shipping() {
         $tmp_info = unserialize(stripslashes($_COOKIE['wCartShipping']));
     }
 
-    // --- get this city shipping price etc from options --
-    $sh_info = $warung->get_shipping_info($tmp_info['shipping'], $tmp_info['city']);
-    if (isset($sh_info)) {
-        foreach ($sh_info as $k=>$v) {
-            $tmp_info [$k] = $v;
-        }
-        //var_dump($tmp_info);
+
+
+    // reset old version session/cookies data
+    if (! is_array($tmp_info['city']) && isset($shippings)) {
+        $tmp_info['city'] = $shippings->getDefaultCity();
+        $tmp_info['address'] = '';
     }
+
 
     return $tmp_info;
 
@@ -347,19 +344,29 @@ function form_selected ($selname, $value) {
     return '';
 }
 
-function form_select($name, $arr, $selected, $callback='') {
-    $ret = '<select name="'.$name.'">';
+function form_select($name, $arr, $selected, $callback='', $isArrayOfObject=false) {
+    $ret = '<select name="'.$name.'"><option value="--- Please Select One ---">--- Please Select One ---</option>';
     if (empty($callback)) {
         foreach ($arr as $k=>$v) {
             $ret .= '<option value="'.$k.'" '.form_selected($selected, $k).'>'.$v.'</option>';
         }
     } else {
-        foreach ($arr as $k=>$v) {
-            $r = call_user_func($callback, $k, $v);
-            if (empty($selected) && isset($r['default'])) {
-                $selected = $r['value'];
+        if ($isArrayOfObject) {
+            foreach ($arr as $v) {
+                $r = call_user_func($callback, $v);
+                if (empty($selected) && isset($r['default'])) {
+                    $selected = $r['value'];
+                }
+                $ret .= '<option value="'.$r['value'].'" '.form_selected($selected, $r['value']).'>'.$r['name'].'</option>';
             }
-            $ret .= '<option value="'.$r['value'].'" '.form_selected($selected, $r['value']).'>'.$r['name'].'</option>';
+        } else {
+            foreach ($arr as $k=>$v) {
+                $r = call_user_func($callback, $k, $v);
+                if (empty($selected) && isset($r['default'])) {
+                    $selected = $r['value'];
+                }
+                $ret .= '<option value="'.$r['value'].'" '.form_selected($selected, $r['value']).'>'.$r['name'].'</option>';
+            }
         }
     }
     $ret .= '</select>';
@@ -370,8 +377,8 @@ function kv_callback($k, $v) {
     return array('value'=>$v, 'name'=>$v);
 }
 
-function city_callback($k, $v) {
-    $arr = array ('value'=> $v->kota, 'name' => $v->kota);
+function city_callback($c) {
+    $arr = array ('value'=> $c->id, 'name' => $v->name);
     if (isset($v->default)) {
         $arr['default'] = true;
     }
@@ -382,15 +389,13 @@ function show_shipping_form() {
     global $warung;
     ob_start();
 
-    $shippings = $warung->get_shipping_services();
-
     $tmp_info = get_shipping();
     extract($tmp_info);
 
-
     $cities=array();
-    if (!empty($shipping)) {
-        $cities = $warung->get_shipping_cities($shipping);
+    $so = $warung->get_shipping_options();
+    if (!empty($so)) {
+        $cities = $so->getCities();
     }
 
     $co_page = $warung->get_checkout_url();
@@ -412,11 +417,6 @@ function show_shipping_form() {
             <input type="text" name="sphone" value="<?=$phone?>"/>
         </div>
         <div class="wCart_form_row">
-            <label for="sshipping">Jasa Pengiriman</label>
-    <?=form_select('sshipping', $shippings, $shipping, 'kv_callback')?>
-        </div>
-
-        <div class="wCart_form_row">
             <label for="sname">Nama Penerima *</label>
             <input type="text" name="sname" value="<?=$name?>"/></div>
         <div class="wCart_form_row">
@@ -424,7 +424,7 @@ function show_shipping_form() {
             <textarea name="saddress"><?=$address?></textarea></div>
         <div class="wCart_form_row">
             <label for="scity">Kota</label>
-    <?=form_select('scity', $cities, $city, 'city_callback')?>
+    <?=form_select('scity', $cities, $city, 'city_callback', true)?>
         </div>
         <div class="wCart_form_row">
             <label for="sadditional_info">Info Tambahan</label>
@@ -468,27 +468,20 @@ function show_confirmation_form() {
     return $ret;
 }
 
-function get_cart_summary($round_weight=true, $round_harga_per_kg=true) {
+function get_cart_summary($round_weight=true, $round_harga_per_kg=false) {
+
+    global $warung;
     $ret = array();
     if (isset($_SESSION["wCart"]) && count($_SESSION["wCart"]) > 0) {
-
-        $harga_per_kg = -1;
-        $free_kg = 0;
-
-        $sh = get_shipping();
-        if (isset($sh['harga_per_kg'])) {
-            $harga_per_kg = $sh['harga_per_kg'];
-        }
-        if (isset($sh['free_kg'])) {
-            $free_kg = $sh['free_kg'];
-        }
 
         $total_weight = 0;
         $total_price = 0;
         $total_items = 0;
+
         $total_ongkir = 0;
         $total_free_kg = 0;
 
+        // ######## hitung sblm ongkir
         $cart_entry = array();
         foreach ($_SESSION["wCart"] as $p) {
             //name|price[|type]
@@ -498,31 +491,57 @@ function get_cart_summary($round_weight=true, $round_harga_per_kg=true) {
             $total_weight += $p['quantity'] * $weight;
             $total_items += $p['quantity'];
 
-            // count free kg
-            if ($free_kg >= $weight) {
-                // berat lebih kecil dari free kg
-                $total_free_kg += $p['quantity'] * $weight;
-            } else {
-                // berat lebih dari free kg
-                $total_free_kg += $p['quantity'] * $free_kg;
-            }
-
             // copy session to temp var
             $tmp = $p;
             $tmp['total_price'] = $p['quantity'] * $p['price'];
 
             array_push($cart_entry, $tmp);
         }
-        
+
         if($round_weight) {
             $total_weight = round($total_weight);
-            $total_free_kg = round($total_free_kg);
         }
 
-        if ($round_harga_per_kg) {
-            $harga_per_kg = round($harga_per_kg,-2);
-        }
 
+        // ########### Hitung setelah Ongkir
+        $harga_per_kg = -1;
+        $free_kg = 0;
+        $service;
+
+        $sh = get_shipping();
+        $city = $sh['city'];
+        if (! empty($city) && isset($city->id)) {
+            // find ongkir
+            $shipping = $warung->get_shipping_options();
+            if (! empty($shipping)) {
+                $service = $shipping->getCheapestServices($city->id, $total_weight);
+                $harga_per_kg = $service->price;
+                if ($round_harga_per_kg) {
+                    $harga_per_kg = round($harga_per_kg,-2);
+                }
+
+                // find free KG
+                if (isset($service->free_weight)) {
+                    $free_kg = $service->free_weight;
+
+                    $total_free_kg = $free_kg * $total_items;
+
+                    if($round_weight) {
+                        $total_free_kg = round($total_free_kg );
+                    }
+
+                    // count free kg
+                    if ($total_free_kg >= $total_weight) {
+                        // berat lebih kecil dari free kg
+                        $total_free_kg = $total_weight;
+                    } else {
+                        // berat lebih dari free kg
+                        $total_free_kg = $total_weight - $total_free_kg;
+                    }
+
+                }
+            }
+        }
 
         sort($cart_entry);
         $ret['cart_entry']=$cart_entry;

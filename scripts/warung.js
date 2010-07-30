@@ -2,6 +2,10 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
+jQuery.validator.addMethod("mustselect", function(value) {
+		return value.toString().indexOf("--- ") == -1;
+	}, 'This field is required');
+
 jQuery(document).ready(function() {
     jQuery("#wCart_shipping_form2").validate({
         rules: {
@@ -13,6 +17,7 @@ jQuery(document).ready(function() {
                 required: true,
                 number: true
             },
+            scity: "mustselect",
             sname: "required",
             saddress: "required"
         }
