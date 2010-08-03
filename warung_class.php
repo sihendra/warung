@@ -84,6 +84,11 @@ class Warung {
         return add_parameter($this->get_checkout_url(), array("step"=>3));
     }
 
+    function get_shipping_simulation_page() {
+        $options = $this->get_options();
+        return $options['shipping_sim_page'];
+    }
+
 
     function get_options() {
 
@@ -97,6 +102,7 @@ class Warung {
                 'currency' => 'Rp. ',
                 'add_to_cart' => 'Add to Cart',
                 'checkout_page' => $def_page,
+                'shipping_sim_page' => '',
                 'prod_options' => array(),
                 'shipping_options' => '',
                 'weight_sign' => 'Kg',
@@ -158,6 +164,7 @@ class Warung {
                 $options['currency'] = $_POST['currency'];
                 $options['add_to_cart'] = $_POST['add_to_cart'];
                 $options['checkout_page'] = $_POST['checkout_page'];
+                $options['shipping_sim_page'] = $_POST['shipping_sim_page'];
                 $options['prod_options']=Utils::parseNamevalParameters($_POST,'prod_option_name','prod_option_value');
                 $options['shipping_cities']=$_POST['shipping_cities'];
                 $options['shipping_options']=$_POST['shipping_options'];
@@ -174,6 +181,7 @@ class Warung {
         $currency = $options['currency'];
         $add2cart = $options['add_to_cart'];
         $checkout_page = $options['checkout_page'];
+        $shipping_sim_page = $options['shipping_sim_page'];
         $prod_options = $options['prod_options'];
         $shipping_cities = $options['shipping_cities'];
         $shipping_options = $options['shipping_options'];
@@ -198,6 +206,17 @@ class Warung {
                             <?
                             foreach (get_pages() as $page) {
                                 echo '<option value="'.$page->ID.'"'.($checkout_page == $page->ID ? '"selected=selected"':'').'>'.$page->post_title.'</option>';
+                            }
+                            ?>
+                            </select><br/>
+                            <label for="shipping_sim_page">Shipping Sim Page</label>
+                            <select id="shipping_sim_page" name="shipping_sim_page">
+                            <?
+                            if (empty($shipping_sim_page)) {
+                                echo '<option value="" selected="selected">-- Please Select --</option>';
+                            }
+                            foreach (get_pages() as $page) {
+                                echo '<option value="'.$page->ID.'"'.($shipping_sim_page == $page->ID ? '"selected=selected"':'').'>'.$page->post_title.'</option>';
                             }
                             ?>
                             </select><br/>

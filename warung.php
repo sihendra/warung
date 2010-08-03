@@ -352,7 +352,7 @@ function form_selected ($selname, $value) {
 }
 
 function form_select($name, $arr, $selected, $callback='', $isArrayOfObject=false, $style='') {
-    $ret = '<select id="'.$name.'" name="'.$name.'" '.$style.'><option value="--- Please Select One ---">--- Please Select One ---</option>';
+    $ret = '<select id="'.$name.'" name="'.$name.'" '.$style.'><option value="--- Please Select ---">--- Please Select ---</option>';
     if (empty($callback)) {
         foreach ($arr as $k=>$v) {
             $ret .= '<option value="'.$k.'" '.form_selected($selected, $k).'>'.$v.'</option>';
@@ -417,7 +417,7 @@ function show_shipping_form() {
             <input type="text" name="semail" value="<?=$email?>"/>
         </div>
         <div class="wCart_form_row">
-            <label for="sphone">Telepon *</label>
+            <label for="sphone">HP (handphone) *</label>
             <input type="text" name="sphone" value="<?=$phone?>"/>
         </div>
         <div class="wCart_form_row">
