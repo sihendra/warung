@@ -77,11 +77,11 @@ class Warung {
     }
 
     function get_shipping_url() {
-        return add_parameter($this->get_checkout_url(), array("step"=>2));
+        return Utils::addParameter($this->get_checkout_url(), array("step"=>2));
     }
 
     function get_order_url() {
-        return add_parameter($this->get_checkout_url(), array("step"=>3));
+        return Utils::addParameter($this->get_checkout_url(), array("step"=>3));
     }
 
     function get_shipping_simulation_page() {
@@ -652,5 +652,100 @@ class Shipping {
         return $ret;
 
     }
+
+    function getSavedShippingInfo() {
+        global $warung;
+
+        $city = '';
+        $shippings = $warung->get_shipping_options();
+
+        if (! empty($shippings)) {
+            $city = $shippings->getDefaultCity();
+        }
+
+
+        $tmp_info = array(
+                'email'=>'',
+                'phone'=>'',
+                'name'=>'',
+                'address'=>'',
+                'city'=>$city,
+                'additional_info'=>''
+        );
+
+
+        if (isset($_SESSION['wCartShipping'])) {
+            $tmp_info = unserialize(stripslashes($_SESSION['wCartShipping']));
+        } else if (isset($_COOKIE['wCartShipping'])) {
+            $tmp_info = unserialize(stripslashes($_COOKIE['wCartShipping']));
+        }
+
+        // reset old version session/cookies data
+        $tmp_city = $tmp_info['city'];
+        if (! isset($tmp_city->name) && isset($shippings)) {
+            $tmp_info['city'] = &$shippings->getDefaultCity();
+            $tmp_info['address'] = '';
+        }
+
+
+        return $tmp_info;
+
+    }
+
+}
+
+class WarungCartWidget extends WP_Widget {
+
+    private $warung;
+
+    function __construct() {
+        global $warung;
+        $this->warung = $warung;
+        $widget_ops = array('classname' => 'wcart_widget', 'description' => 'Warung Cart Shopping Cart' );
+        parent::__construct(false, $name='Warung Cart', $widget_ops );
+    }
+
+    public function widget($args, $instance) {
+        $warung = $this->warung;
+        $cartImage = $warung->pluginUrl."images/cart.png";
+        $co_page = $warung->get_checkout_url();
+        $clear_page = Utils::addParameter(get_option("home"), array("wc_clear"=>"1"));
+        $cart_sumary = get_cart_summary();
+
+        extract($args);
+        $title = apply_filters('widget_title', $instance['title']);
+        ?>
+              <?php echo $before_widget; ?>
+                  <?php if ( $title )
+                        echo $before_title .'<a href="'.$co_page.'"><img src="'.$cartImage.'" alt="shopping cart"/> Keranjang Belanja</a>'. $after_title; ?>
+
+                <? if (!empty($cart_sumary)) : ?>
+                    <?extract($cart_sumary);?>
+                    <div id="wcart"><a href="<?=$co_page?>">Ada <?=$total_items?> Item (<?=$warung->formatCurrency($total_price)?>)</a></div>
+                    <div id="wcart_co"><a href="<?=$clear_page?>">Clear</a></div>
+                <? else: ?>
+                    <p>0 Item</p>
+                <? endif; ?>
+              <?php echo $after_widget; ?>
+        <?php
+    }
+
+    public function update($new_instance, $old_instance) {
+        $instance = $old_instance;
+        $instance['title'] = strip_tags($new_instance['title']);
+
+        return $instance;
+
+    }
+
+    public function form($instance) {
+        $instance = wp_parse_args( (array) $instance, array( 'title' => 'Shopping Cart') );
+        $title = strip_tags($instance['title']);
+        ?>
+        <p><label for="<?php echo $this->get_field_id('title'); ?>">Title: <input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo attribute_escape($title); ?>" /></label></p>
+        <?php
+    }
+
+
 }
 ?>

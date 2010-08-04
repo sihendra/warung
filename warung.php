@@ -28,8 +28,16 @@ if (class_exists("Warung")) {
     if (isset($warung)) {
         register_activation_hook(__FILE__, array(&$warung,'install'));
     }
+    // sessions and params processing
     add_action('init', 'warung_init');
+
+    // admin menu/page
     add_action('admin_menu', array(&$warung, 'admin_menu'));
+
+    // widget
+    add_action('widgets_init', create_function('', 'return register_widget("WarungCartWidget");'));
+  
+    // css and JS
     add_action('wp_print_scripts', array(&$warung, 'init_scripts'));
     add_action('wp_print_styles', array(&$warung, 'init_styles'));
 } else {
@@ -37,55 +45,13 @@ if (class_exists("Warung")) {
 }
 
 function warung_init() {
+    global $warung;
     session_start();
-    register_sidebar_widget('Warung Cart', 'warung_cart');
+    //wp_register_sidebar_widget('Warung Cart', 'Warung Cart', 'warung_cart');
     add_filter('the_content', 'filter_content');
     // save cookie
     //updateShippingInfo();
     process_params();
-}
-
-//######################
-//# USER DATA/SHIPPING #
-//######################
-
-function get_shipping() {
-    global $warung;
-
-    $city = '';
-    $shippings = $warung->get_shipping_options();
-
-    if (! empty($shippings)) {
-        $city = $shippings->getDefaultCity();
-    }
-
-
-    $tmp_info = array(
-            'email'=>'',
-            'phone'=>'',
-            'name'=>'',
-            'address'=>'',
-            'city'=>$city,
-            'additional_info'=>''
-    );
-
-
-    if (isset($_SESSION['wCartShipping'])) {
-        $tmp_info = unserialize(stripslashes($_SESSION['wCartShipping']));
-    } else if (isset($_COOKIE['wCartShipping'])) {
-        $tmp_info = unserialize(stripslashes($_COOKIE['wCartShipping']));
-    }
-
-    // reset old version session/cookies data
-    $tmp_city = $tmp_info['city'];
-    if (! isset($tmp_city->name) && isset($shippings)) {
-        $tmp_info['city'] = &$shippings->getDefaultCity();
-        $tmp_info['address'] = '';
-    }
-
-
-    return $tmp_info;
-
 }
 
 function process_params() {
@@ -133,9 +99,9 @@ function get_order_summary($isAdminView=false, $isEmailView=false, $v=array()) {
     ob_start();
 
     $harga_per_kg = -1;
-    $sh = get_shipping();
     $cs = get_cart_summary();
     $so = $warung->get_shipping_options();
+    $sh = $so->getSavedShippingInfo();
 
     if ($isEmailView) {
         extract($sh);
@@ -247,7 +213,8 @@ function send_order($bccAdmin=false) {
     global $warung;
 
     if (!empty($_SESSION['wCart']) && isset($_COOKIE['wCartShipping'])) {
-        $sh = get_shipping();
+        $so = $warung->get_shipping_options();
+        $sh = $so->getSavedShippingInfo();
         $email_pemesan = $sh['email'];
 
         $admin_email = get_option("admin_email");
@@ -324,26 +291,6 @@ function update_shipping() {
 
 }
 
-function add_parameter($url, $param) {
-    $ret=$url;
-    $qstr='';
-    $i=0;
-    foreach ($param as $key=>$value) {
-        if ($i++ == 0) {
-            $qstr .= $key.'='.$value;
-        } else {
-            $qstr .= '&'.$key.'='.$value;
-        }
-    }
-    if (strpos($url,'?')) {
-        $ret = $url.'&'.$qstr;
-    } else {
-        $ret = $url.'?'.$qstr;
-    }
-
-    return $ret;
-}
-
 function form_selected ($selname, $value) {
     if ($selname == $value) {
         return 'selected="selected"';
@@ -396,11 +343,12 @@ function show_shipping_form() {
     global $warung;
     ob_start();
 
-    $tmp_info = get_shipping();
+    $so = $warung->get_shipping_options();
+    $tmp_info = $so->getSavedShippingInfo();
     extract($tmp_info);
 
     $cities=array();
-    $so = $warung->get_shipping_options();
+    
     if (!empty($so)) {
         $cities = $so->getCities();
     }
@@ -455,16 +403,13 @@ function show_shipping_form() {
 function show_confirmation_form() {
     global $warung;
     ob_start();
-    $sh = get_shipping();
-    if (isset($sh)) {
-        ?>
+    ?>
 <div style="padding: 10px;">
-    <form method="POST" id="wCart_confirmation" action="<?=$warung->get_order_url()?>">
-        <input type="submit" name="send_order" value="Pesan"/>
-    </form>
+<form method="POST" id="wCart_confirmation" action="<?=$warung->get_order_url()?>">
+    <input type="submit" name="send_order" value="Pesan"/>
+</form>
 </div>
-        <?
-    }
+    <?
 
     $ret = ob_get_contents();
     ob_end_clean();
@@ -513,11 +458,12 @@ function get_cart_summary($round_weight=true, $ceil_price=true) {
         $free_kg = 0;
         $service;
 
-        $sh = get_shipping();
+        $so = $warung->get_shipping_options();
+        $sh = $so->getSavedShippingInfo();
         $city = $sh['city'];
         if (! empty($city) && isset($city->id)) {
             // find ongkir
-            $so = $warung->get_shipping_options();
+            
             if (! empty($so)) {
                 $service = $so->getCheapestServices($city->id, $total_weight);
                 if (! empty ($service)) {
@@ -604,7 +550,7 @@ function show_detailed_cart($showUpdateForm=true) {
 
         $current_page = get_permalink();
         $co_page = $warung->get_checkout_url();
-        $clear_page = add_parameter($current_page, array("wc_clear"=>"1"));
+        $clear_page = Utils::addParameter($current_page, array("wc_clear"=>"1"));
         $shipping_page = $warung->get_shipping_url();
         $home_page = get_option("home");
 
@@ -625,7 +571,7 @@ function show_detailed_cart($showUpdateForm=true) {
                     foreach ($cart_entry as $p) {
                         //name|price[|type]
                         extract($p);
-                        $remove_page = add_parameter($current_page, array("wc_rem"=>$cart_id));
+                        $remove_page = Utils::addParameter($current_page, array("wc_rem"=>$cart_id));
                         $prod_info = $warung->warung_get_product_by_id($id);
             ?>
             <tr>
@@ -688,36 +634,6 @@ function show_detailed_cart($showUpdateForm=true) {
 
 
     return $ret;
-}
-
-
-function warung_cart($args=array()) {
-    global $post;
-    global $warung;
-    extract($args);
-
-    $cartImage = $warung->pluginUrl."images/cart.png";
-    $co_page = $warung->get_checkout_url();
-    $clear_page = add_parameter(get_option("home"), array("wc_clear"=>"1"));
-
-    echo $before_widget;
-    echo $before_title .'<a href="'.$co_page.'"><img src="'.$cartImage.'" alt="shopping cart"/> Keranjang Belanja</a>'. $after_title;
-    //echo '<div id="wcart_icon"><img src="'.$cartImage.'" alt="shopping cart"/></div>';
-    // show cart
-
-    $cart_sumary = get_cart_summary();
-
-    if (!empty($cart_sumary)) {
-
-        extract($cart_sumary);
-
-        echo '<div id="wcart"><a href="'.$co_page.'">Ada '.$total_items.' Item ('.$warung->formatCurrency($total_price).')</a></div>';
-        echo '<div id="wcart_co"><a href="'.$clear_page.'">Clear</a></div>';
-    } else {
-        echo '<div id="status">Kosong</div>';
-    }
-    
-    echo $after_widget;
 }
 
 function warung_update_cart($id, $qtt) {
