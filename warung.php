@@ -218,7 +218,7 @@ function send_order($bccAdmin=false) {
         $email_pemesan = $sh['email'];
 
         $admin_email = get_option("admin_email");
-        $order_id = mt_rand(10, 9999);
+        $order_id = date('ymdH').mt_rand(10, 9999);
         $subject = "[Warungsprei.com] Pemesanan #" . $order_id;
         $admin_message = get_order_summary(true, true, array("order_id"=>$order_id));
         $customer_message = get_order_summary(false, true, array("order_id"=>$order_id));
@@ -791,9 +791,9 @@ function filter_content($content) {
                 }
                 $s_serv = $s->getServiceByCityAndWeight($s_cid, $s_weight);
                 foreach ($s_serv as $sss) {
-                   if ($sss != $s_cheap) {
-                       array_push($resp, $sss->name.': '.$warung->formatCurrency(Utils::ceilToHundred($sss->price) * $s_weight).' ('.$warung->formatCurrency(Utils::ceilToHundred($sss->price)). '/Kg)');
-                   }
+                    if ($sss != $s_cheap) {
+                        array_push($resp, $sss->name.': '.$warung->formatCurrency(Utils::ceilToHundred($sss->price) * $s_weight).' ('.$warung->formatCurrency(Utils::ceilToHundred($sss->price)). '/Kg)');
+                    }
                 }
             }
 
@@ -802,7 +802,7 @@ function filter_content($content) {
             <?
             if (! empty($resp)) {
                 ?>
-        <div class="wcart_info">
+        <div class="wcart_shipping_sim_result">
                 <?
                 foreach ($resp as $r) {
                     ?><?=$r?><br/><?
@@ -811,21 +811,23 @@ function filter_content($content) {
         </div>
                 <?
             }?>
-        <div id="wCart_shipping_form" >
+        <div class="wcart_shipping_sim" >
             
-            <form action="" method="POST">
-                <div class="wCart_form_row">
-                    <label for="wc_sim_city">Kota Tujuan</label>
-                    <?=form_select('wc_sim_city', $cities, $city, 'city_callback', true)?>
-                </div>
-                <div class="wCart_form_row">
-                    <label for="wc_sim_weight">Berat (Kg)</label>
-                    <input id="wc_sim_weight" type="text" name="wc_sim_weight" value="<?=$wc_weight?>"/>
-                </div>
-                <div class="wCart_form_row">
-                    <label for="wc_sim_weight">&nbsp;</label>
-                    <input type="submit" value="Cek Ongkos Kirim"/>
-                </div>
+            <form method="POST">
+                <table>
+                    <tr>
+                        <td><label for="wc_sim_city">Kota Tujuan</label></td>
+                        <td><?=form_select('wc_sim_city', $cities, $city, 'city_callback', true)?></td>
+                    </tr>
+                    <tr>
+                        <td><label for="wc_sim_weight">Berat (Kg)</label></td>
+                        <td><input id="wc_sim_weight" type="text" name="wc_sim_weight" value="<?=$wc_weight?>"/></td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;</td>
+                        <td><input type="submit" value="Cek Ongkos Kirim"/></td>
+                    </tr>
+                </table>
             </form>
         </div>
             <?
