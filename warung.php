@@ -566,7 +566,7 @@ function show_detailed_cart($showUpdateForm=true) {
                 }
         ?>
         <table id="wcart-detailed">
-            <tr><th>Item</th><th>Berat</th><th>Harga</th><th>Jumlah</th><th>Total</th></tr>
+            <tr><th>Item</th><th>Berat</th><th>Harga</th><th>Jumlah</th><th>Total</th><th>-</th></tr>
                     <?
                     foreach ($cart_entry as $p) {
                         //name|price[|type]
@@ -589,8 +589,10 @@ function show_detailed_cart($showUpdateForm=true) {
                                     echo $quantity;
             } ?>
                 </td>
-                <td><?=$warung->formatCurrency($total_price)?></td>
-                <!--<td><a id="urlbuton" href="<?=$remove_page?>">Remove</a></td>-->
+                <td><?=$warung->formatCurrency($total_price)?> </td>
+                <?php if($showUpdateForm):?>
+                <td><a class="wcart_remove_item" href="<?=$remove_page?>"><div><span>(X)</span></div></a></td>
+                <? endif; ?>
             </tr>
 
                         <?

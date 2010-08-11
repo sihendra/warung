@@ -721,10 +721,10 @@ class WarungCartWidget extends WP_Widget {
 
                 <? if (!empty($cart_sumary)) : ?>
                     <?extract($cart_sumary);?>
-                    <div id="wcart"><a href="<?=$co_page?>">Ada <?=$total_items?> Item (<?=$warung->formatCurrency($total_price)?>)</a></div>
-                    <div id="wcart_co"><a href="<?=$clear_page?>">Clear</a></div>
+                    <div><a href="<?=$co_page?>">Ada <?=$total_items?> Item (<?=$warung->formatCurrency($total_price)?>)</a></div>
+                    <div class="wcart_widget_nav"><a href="<?=$co_page?>">Lihat pesanan</a> | <a href="<?=$clear_page?>">Batal</a></div>
                 <? else: ?>
-                    <p>0 Item</p>
+                    <div>0 Item, beli dong!</div>
                 <? endif; ?>
               <?php echo $after_widget; ?>
         <?php

@@ -156,7 +156,7 @@ root {
 
 li.wcart_widget {
     background-color: green !important;
-    border: 1px dashed #DDDDDD !important;
+    border: 1px dotted #DDDDDD !important;
     -moz-border-radius: 10px 0px 10px 0px !important;
     -webkit-border-radius: 10px 0px 10px 0px !important;
 }
@@ -169,8 +169,16 @@ li.wcart_widget img {
     left: -15px !important;
 }
 
-li.wcart_widget p {
-    text-align: center !important;
+li.wcart_widget div {
+    text-align: center;
+    padding-top: 0px;
+    color: white;
+}
+
+li.wcart_widget div.wcart_widget_nav a {
+/*    padding-left: 100px;*/
+    font-size: 0.8em;
+    color: black;
 }
 
 /**
@@ -178,7 +186,7 @@ li.wcart_widget p {
  */
 
 div.wcart_shipping_sim_result {
-    border: 1px dashed;
+    border: 1px dotted;
     background-color: green;
     padding: 10px;
     color: white;
@@ -193,4 +201,20 @@ div.wcart_shipping_sim {
 div.wcart_shipping_sim select, div.wcart_shipping_sim td > input, div.wcart_shipping_sim td {
     margin-left: 10px;
     vertical-align: middle;
+}
+
+/**
+* Shopping Cart Detailed
+*/
+
+a.wcart_remove_item div {
+    background-image: url("../images/cancel-16x16.png");
+    background-repeat:no-repeat !important;
+    background-position: center;
+    width: 32px !important;
+    height: 32px !important;
+}
+
+a.wcart_remove_item div span {
+    display: none;
 }
