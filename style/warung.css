@@ -50,7 +50,7 @@ root {
     clear: both;
     width: 100%;
 }
-#wCart_shipping_form input[type=text], select, textarea {
+#wCart_shipping_form input[type=text], #wCart_shipping_form select, #wCart_shipping_form textarea {
     width: 250px;
     float: left;
 }
