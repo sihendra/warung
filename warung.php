@@ -239,7 +239,7 @@ function send_order($bccAdmin=false) {
         if ($ret) {
             ?>
             <div class="wcart_info">
-                <p>Informasi pemesanan juga sudah kami kirim ke <b>'<?=$email_pemesan?>'.</b></p>
+                <p>Informasi pemesanan juga sudah kami kirim ke <b>'<?=$email_pemesan?>'.</b> Mohon periksa juga folder <b>'Junk'</b> jika tidak ada di inbox.</p>
             </div>
 <div class="wcart_general_container">
             <?
