@@ -116,9 +116,9 @@ function get_order_summary($isAdminView=false, $isEmailView=false, $v=array()) {
             Setelah pembayaran dilakukan harap lakukan konfirmasi pembayaran agar pesanan dapat segera kami proses.
             Konfirmasi dapat dilakukan dengan cara me-reply email pemesanan ini atau menghubungi kami di:
             <ul>
-                <li>HP: 08888142879, 081808815325 </li>
+                <li>HP: 08889693342, 081808815325 </li>
                 <li>Email: info@warungsprei.com</li>
-                <li>YM: reni_susanto, go_to_hendra</li>
+                <li>YM: reni_susanto, warungsprei_hendra</li>
             </ul>
             <br/>
             <br/>
