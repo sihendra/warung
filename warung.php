@@ -117,9 +117,9 @@ function get_order_summary($isAdminView=false, $isEmailView=false, $v=array()) {
             Setelah pembayaran dilakukan harap lakukan konfirmasi pembayaran agar pesanan dapat segera kami proses.
             Konfirmasi dapat dilakukan dengan cara me-reply email pemesanan ini atau menghubungi kami di:
             <ul>
-                <li>HP: 08888142879, 081808815325 </li>
+                <li>HP: 08889693342, 081808815325 </li>
                 <li>Email: info@warungsprei.com</li>
-                <li>YM: reni_susanto, go_to_hendra</li>
+                <li>YM: reni_susanto, warungsprei_hendra</li>
             </ul>
             <br/>
             <br/>
@@ -240,7 +240,7 @@ function send_order($bccAdmin=false) {
         if ($ret) {
             ?>
             <div class="wcart_info">
-                <p>Informasi pemesanan juga sudah kami kirim ke <b>'<?=$email_pemesan?>'.</b></p>
+                <p>Informasi pemesanan juga sudah kami kirim ke <b>'<?=$email_pemesan?>'.</b> Mohon periksa juga folder <b>'Junk'</b> jika tidak ada di inbox.</p>
             </div>
 <div class="wcart_general_container">
             <?
