@@ -36,6 +36,7 @@ if (class_exists("Warung")) {
 
     // widget
     add_action('widgets_init', create_function('', 'return register_widget("WarungCartWidget");'));
+    add_action('widgets_init', create_function('', 'return register_widget("WarungFeaturedContentWidget");'));
   
     // css and JS
     add_action('wp_print_scripts', array(&$warung, 'init_scripts'));
@@ -844,6 +845,9 @@ function filter_content($content) {
         $product = $warung->warung_get_product_by_id($post->ID);
 
         if (!empty($product) && !is_search()) {
+            if (isset($product["option_text"])) {
+                echo $product["option_text"];
+            }
             ?>
 <div id="wCart_add_2_cart">
     <form method="POST">
