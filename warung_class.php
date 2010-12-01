@@ -240,8 +240,10 @@ class Warung {
                                         $prod = $val;
                                     }
                                     ?>
+                            <br/>
                             <label for="prod_option_name-<?=$i?>">Name</label>
                             <input type="text" id="prod_option_name-<?=$i?>" name="prod_option_name-<?=$i?>" value="<?=stripslashes($name)?>" />
+                            <br/>
                             <label for="prod_option_value-<?=$i?>">Value</label>
                             <textarea id="prod_option_value-<?=$i?>" name="prod_option_value-<?=$i?>" rows="5" cols="50"><?=stripslashes($prod)?></textarea>
                             <br/>
@@ -254,10 +256,13 @@ class Warung {
                                 }
                             }
                             ?>
+                            <br/>
                             <label for="prod_option_name-<?=$i?>">Name</label>
                             <input type="text" id="prod_option_name-<?=$i?>" name="prod_option_name-<?=$i?>" value="" />
+                            <br/>
                             <label for="prod_option_value-<?=$i?>">Value</label>
                             <textarea name="prod_option_value-<?=$i?>" id="prod_option_value-<?=$i?>" rows="5" cols="50"></textarea>
+                            <br/>
                             <label for="prod_option_value-<?=$i?>">Text</label>
                             <textarea name="prod_option_txt-<?=$i?>" id="prod_option_txt-<?=$i?>" rows="5" cols="50"></textarea>
 
@@ -336,7 +341,7 @@ class Warung {
 
                 if (!empty($prod_opts) && is_array($prod_opts)) {
                     foreach($prod_opts as $k=>$v) {
-                        if ($k == $product_options_name) {
+                        if ($v->name == $product_options_name) {
                             $ret["option_name"]=$product_options_name;
                             if (isset($v->value)) {
                                 $ret["option_value"] = Utils::parseJsonMultiline($v->value);
@@ -472,10 +477,10 @@ class Warung {
             <select name="product_options">';
             echo '<option value="-- none --">-- none --</option>';
             foreach ($prod_options as $key => $value) {
-                if ($product["option_name"] == $key) {
-                    echo '<option value="'.$key.'" selected="selected">'.$key.'</option>';
+                if ($product["option_name"] == $value->name) {
+                    echo '<option value="'.$value->name.'" selected="selected">'.$value->name.'</option>';
                 } else {
-                    echo '<option value="'.$key.'">'.$key.'</option>';
+                    echo '<option value="'.$value->name.'">'.$value->name.'</option>';
                 }
             }
             echo'</select><br/>';

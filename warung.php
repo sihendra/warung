@@ -843,10 +843,9 @@ function filter_content($content) {
         // check is this post contains product informations
 
         $product = $warung->warung_get_product_by_id($post->ID);
-
         if (!empty($product) && !is_search()) {
             if (isset($product["option_text"])) {
-                echo $product["option_text"];
+                echo stripslashes($product["option_text"]);
             }
             ?>
 <div id="wCart_add_2_cart">
