@@ -156,18 +156,18 @@ class Warung {
 
         $options = $this->get_options();
 
-        if (isset($_POST['submitted'])) {
+        if (isset($_POST['general_submit'])) {
             //check security
             if (check_admin_referer('warung-nonce')) {
 
-                $options = array();
+                if (empty($options) || !is_array($options)) {
+                    $options = array();
+                }
+                
                 $options['currency'] = $_POST['currency'];
                 $options['add_to_cart'] = $_POST['add_to_cart'];
                 $options['checkout_page'] = $_POST['checkout_page'];
                 $options['shipping_sim_page'] = $_POST['shipping_sim_page'];
-                $options['prod_options']=Utils::parseParametersToObject($_POST,'prod_option');
-                $options['shipping_cities']=$_POST['shipping_cities'];
-                $options['shipping_options']=$_POST['shipping_options'];
                 $options['weight_sign'] = $_POST['weight_sign'];
 
                 update_option($this->db_option, $options);
@@ -182,14 +182,11 @@ class Warung {
         $add2cart = $options['add_to_cart'];
         $checkout_page = $options['checkout_page'];
         $shipping_sim_page = $options['shipping_sim_page'];
-        $prod_options = $options['prod_options'];
-        $shipping_cities = $options['shipping_cities'];
-        $shipping_options = $options['shipping_options'];
         $weight_sign = $options['weight_sign'];
 
         ?>
         <div class="wrap" style="max-width:950px !important;">
-            <h2>Warung</h2>
+            <h2>General Options</h2>
             <div id="poststuff" style="margin-top:10px;">
                 <div id="mainblock" style="width:810px">
                     <div class="dbx-content">
@@ -220,7 +217,113 @@ class Warung {
                             }
                             ?>
                             </select><br/>
-                            <h2>Product Options Set</h2>
+
+
+
+                            <div class="submit"><input type="submit" name="general_submit" value="Update" /></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <?
+
+        $out = ob_get_contents();
+        ob_end_clean();
+
+        echo $out;
+    }
+
+    function handle_shipping() {
+        ob_start();
+
+        $options = $this->get_options();
+
+        if (isset($_POST['shipping_submit'])) {
+            //check security
+            if (check_admin_referer('warung-nonce')) {
+
+                if (empty($options) || !is_array($options)) {
+                    $options = array();
+                }
+                $options['shipping_cities']=$_POST['shipping_cities'];
+                $options['shipping_options']=$_POST['shipping_options'];
+
+                update_option($this->db_option, $options);
+
+                echo '<div class="updated fade"><p>Plugin Setting Saved.</p></div>';
+            } else {
+                echo '<div class="updated fade"><p>Plugin Setting Not Saved caused by security breach.</p></div>';
+            }
+        }
+
+        $shipping_cities = $options['shipping_cities'];
+        $shipping_options = $options['shipping_options'];
+
+        ?>
+        <div class="wrap" style="max-width:950px !important;">
+            <h2>Shipping Options</h2>
+            <div id="poststuff" style="margin-top:10px;">
+                <div id="mainblock" style="width:810px">
+                    <div class="dbx-content">
+                        <form action="" method="post">
+                            <?=wp_nonce_field('warung-nonce')?>
+                            <h2>Cities</h2>
+<!--                            <label for="shipping_cities">Cities</label>-->
+                            <textarea id="shipping_cities" name="shipping_cities" rows="5" cols="50"><?=stripslashes($shipping_cities)?></textarea>
+                            <br/>
+                            <h2>Services</h2>
+<!--                            <label for="shipping_options">Shipping Services</label>-->
+                            <textarea id="shipping_options" name="shipping_options" rows="5" cols="50"><?=stripslashes($shipping_options)?></textarea>
+                            <br/>
+                            <div class="submit"><input type="submit" name="shipping_submit" value="Update" /></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <?
+
+        $out = ob_get_contents();
+        ob_end_clean();
+
+        echo $out;
+    }
+
+    function handle_product_opt() {
+        ob_start();
+
+        $options = $this->get_options();
+
+        if (isset($_POST['product_opt_submit'])) {
+            //check security
+            if (check_admin_referer('warung-nonce')) {
+
+                if (empty($options) || !is_array($options)) {
+                    $options = array();
+                }
+                $options['prod_options']=Utils::parseParametersToObject($_POST,'prod_option');
+
+                update_option($this->db_option, $options);
+
+                echo '<div class="updated fade"><p>Plugin Setting Saved.</p></div>';
+            } else {
+                echo '<div class="updated fade"><p>Plugin Setting Not Saved caused by security breach.</p></div>';
+            }
+        }
+
+        $prod_options = $options['prod_options'];
+
+        ?>
+        <div class="wrap" style="max-width:950px !important;">
+            <h2>Product Option Set</h2>
+            <div id="poststuff" style="margin-top:10px;">
+                <div id="mainblock" style="width:810px">
+                    <div class="dbx-content">
+                        <form action="" method="post">
+                            <?=wp_nonce_field('warung-nonce')?>
                             <?
                             $i = 0;
                             if (is_array($prod_options)) {
@@ -267,19 +370,7 @@ class Warung {
                             <textarea name="prod_option_txt-<?=$i?>" id="prod_option_txt-<?=$i?>" rows="5" cols="50"></textarea>
 
 
-                            <h2>Shipping Cities</h2>
-                            <label for="shipping_cities">Cities</label>
-                            <textarea id="shipping_cities" name="shipping_cities" rows="5" cols="50"><?=stripslashes($shipping_cities)?></textarea>
-                            <br/>
-
-
-                            <h2>Shipping Services</h2>
-                            <label for="shipping_options">Shipping Services</label>
-                            <textarea id="shipping_options" name="shipping_options" rows="5" cols="50"><?=stripslashes($shipping_options)?></textarea>
-                            <br/>
-
-
-                            <div class="submit"><input type="submit" name="submitted" value="Update" /></div>
+                            <div class="submit"><input type="submit" name="product_opt_submit" value="Update" /></div>
                         </form>
                     </div>
                 </div>
@@ -295,7 +386,13 @@ class Warung {
     }
 
     function admin_menu() {
-        add_menu_page('Warung Options', 'Warung', 8, basename(__FILE__), array(&$this, 'handle_options'));
+        add_menu_page('Warung Options', 'Warung', 'administrator', __FILE__, array(&$this, 'handle_options'), plugins_url('/images/warung.png', __FILE__));
+        // add sub menu
+        add_submenu_page(__FILE__, 'Warung General Options', 'General', 'administrator', __FILE__, array(&$this, 'handle_options'));
+        add_submenu_page(__FILE__, 'Warung Shipping', 'Shipping', 'administrator', __FILE__.'_shipping', array(&$this, 'handle_shipping'));
+        add_submenu_page(__FILE__, 'Warung Product Options', 'Product Options', 'administrator', __FILE__.'_product_option', array(&$this, 'handle_product_opt'));
+
+        // add metabox in edit post page
         add_meta_box('warung-product-id','Product Information',array(&$this, 'display_product_custom_field'),'post','normal','high');
 
         //add_action('do_meta_boxes', array(&$this, 'display_meta'));
