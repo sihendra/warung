@@ -411,6 +411,8 @@ class Warung {
         $product_options_name = get_post_meta($post_id, '_warung_product_options', true);
         $product_thumbnail = get_post_meta($post_id, 'thumbnail', true);
         $product_weight_discount = get_post_meta($post_id, '_warung_product_weight_discount', true);
+        $product_stock = get_post_meta($post_id, '_warung_product_stock', true);
+        $product_show_stock = get_post_meta($post_id, '_warung_product_show_stock', true);
 
         $post = get_post($post_id);
         if (!empty($post) && empty($product_thumbnail)) {
@@ -431,6 +433,8 @@ class Warung {
             $ret["price"] = $product_price;
             $ret["weight"] = $product_weight;
             $ret["thumbnail"] = $product_thumbnail;
+            $ret["stock"] = $product_stock;
+            $ret["show_stock"] = $product_show_stock;
 
             if (!empty($product_options_name)) {
                 $opts = $this->get_options();
@@ -506,6 +510,8 @@ class Warung {
         $prod_weight = $_POST['product_weight'];
         $prod_options = $_POST['product_options'];
         $prod_weight_discount = $_POST['product_weight_discount'];
+        $prod_stock = $_POST['product_stock'];
+        $prod_show_stock = $_POST['product_show_stock'];
 
         if (!empty($prod_code) && !empty($prod_name)) {
             update_post_meta($post_id, '_warung_product_code', $prod_code);
@@ -524,6 +530,8 @@ class Warung {
             } else {
                 delete_post_meta($post_id, '_warung_product_options');
             }
+            update_post_meta($post_id, '_warung_product_stock', $prod_stock);
+            update_post_meta($post_id, '_warung_product_show_stock', $prod_show_stock);
         }
 
 
@@ -538,51 +546,89 @@ class Warung {
         // Use nonce for verification
         global $post;
 
-        echo '<input type="hidden" name="warung_noncename" id="warung_noncename" value="' .
-                wp_create_nonce( plugin_basename(__FILE__) ) . '" />';
-
+        
         // get prev meta
         $product = $this->warung_get_product_by_id($post->ID);
+
+        //default values
+        if (empty($product['stock'])) {
+            $product['stock'] = '';
+        }
 
         // product code
         // price
         // weight
         // option set
-        echo '<label for="product_code">Code</label>
-        <input type="text" name="product_code" value="'.$product["code"].'"/><br/>
-
-        <label for="product_name">Name</label>
-        <input type="text" name="product_name" value="'.$product["name"].'"/><br/>
-
-        <label for="product_price">Price</label>
-        <input type="text" name="product_price" value="'.$product["price"].'"/><br/>
-
-
-        <label for="product_weight">Weight</label>
-        <input type="text" name="product_weight" value="'.$product["weight"].'"/><br/>
-
-        <label for="product_weight_discount">Weight Discount</label>
-        <input type="text" name="product_weight_discount" value="'.$product["weight_discount"].'"/><br/>';
-
+        ?>
+        <input type="hidden" name="warung_noncename" id="warung_noncename"
+               value="<?=wp_create_nonce( plugin_basename(__FILE__) )?>" />
+        <style type="text/css">
+            .form-field label {font-weight: bold; display: block; padding: 5px 0pt 2px 2px;}
+        </style>
+        <div class="form-field">
+        <label for="product_code"><?=__("Code")?></label>
+        <input type="text" name="product_code" value="<?=$product["code"]?>"/><br/>
+        <p><?=__("Enter product code")?></p>
+        </div>
+        <div class="form-field">
+        <label for="product_name"><?=__("Name")?></label>
+        <input type="text" name="product_name" value="<?=$product["name"]?>"/><br/>
+        <p><?=__("Enter product name")?></p>
+        </div>
+        <div class="form-field">
+        <label for="product_price"><?=__("Price")?></label>
+        <input type="text" name="product_price" value="<?=$product["price"]?>"/><br/>
+        <p><?=__("Enter product price")?></p>
+        </div>
+        <div class="form-field ">
+            <label for="product_weight"><?=__("Weight")?></label>
+            <input type="text" name="product_weight" value="<?=$product["weight"]?>"/><br/>
+            <p><?=__("Enter the product weight")?></p>
+        </div>
+        <div class="form-field ">
+        <label for="product_stock"><?=__("Product Stock")?></label>
+        <input type="text" name="product_stock" value="<?=$product["stock"]?>"/><br/>
+        <p><?=__("Enter the product stock or leave blank if stock is unlimited.")?></p>
+        </div>
+        <div class="form-field ">
+        <label for="product_show_stock"><?=__("Show Product Stock?")?></label>
+        <input type="checkbox" name="product_show_stock" value="show_stock" <?=!empty($product["show_stock"])?'checked="checked"':''?>/><br/>
+        <p><?=__("Whether to show product stock number or not")?></p>
+        </div>
+        <?
         // get from option
         $prod_options = $this->get_options();
         $prod_options = $prod_options["prod_options"];
         // get from product custom field
 
         if (is_array($prod_options) && !empty($prod_options)) {
-            echo '<label for="product_options">Option Set</label>
-            <select name="product_options">';
-            echo '<option value="-- none --">-- none --</option>';
+            ?>
+        <div class="form-field ">
+            <label for="product_options"><?=__("Option Set")?></label>
+            <select name="product_options">
+                <option value="-- none --">-- none --</option><?
             foreach ($prod_options as $key => $value) {
                 if ($product["option_name"] == $value->name) {
-                    echo '<option value="'.$value->name.'" selected="selected">'.$value->name.'</option>';
+                    ?><option value="<?=$value->name?>" selected="selected"><?=$value->name?></option><?
                 } else {
-                    echo '<option value="'.$value->name.'">'.$value->name.'</option>';
+                    ?><option value="<?=$value->name?>"><?$value->name?></option><?
                 }
             }
-            echo'</select><br/>';
+            ?></select>
+            <p><?=__("Choose option set")?></p>
+        </div><?
 
         }
+
+        ?>
+        <h4><?=__("Discount")?></h4>
+        <div class="form-field ">
+        <label for="product_weight_discount"><?=__("Weight Discount")?></label>
+        <input type="text" name="product_weight_discount" value="<?=$product["weight_discount"]?>"/><br/>
+        <p><?=__("Enter discounted weight if any ")?></p>
+        </div>
+        <?
+
 
     }
 
