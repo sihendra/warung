@@ -265,7 +265,7 @@
 
 
             // get prev meta
-            $product = $this->warung->getProductById($post->ID);
+            $product = $this->warung->getProductById($post->ID, false /* dont calculate discount */);
 
             //default values
             if (empty($product['stock'])) {
@@ -308,7 +308,7 @@
             <p><?=__("Enter the product stock or leave blank if stock is unlimited.")?></p>
             </div>
             <div class="form-field ">
-            <label for="product_show_stock"><?=__("Show Product Stock?")?></label>
+            <label for="product_show_stock"><?=__("Show Available Product Stock?")?></label>
             <input type="checkbox" name="product_show_stock" value="show_stock" <?=!empty($product["show_stock"])?'checked="checked"':''?>/><br/>
             <p><?=__("Whether to show product stock number or not")?></p>
             </div>
@@ -340,9 +340,15 @@
             ?>
             <h4><?=__("Discount")?></h4>
             <div class="form-field ">
-            <label for="product_weight_discount"><?=__("Weight Discount")?></label>
+            <label for="product_price_discount"><?=__("Discounted Price")?></label>
+            <input type="text" name="product_price_discount" value="<?=isset($product["price_discount"])?$product["price_discount"]:'';?>"/><br/>
+            <p><?=__("Enter discounted price if any. Example 10000")?></p>
+            </div>
+            
+            <div class="form-field ">
+            <label for="product_weight_discount"><?=__("Discounted Weight")?></label>
             <input type="text" name="product_weight_discount" value="<?=isset($product["weight_discount"])?$product["weight_discount"]:'';?>"/><br/>
-            <p><?=__("Enter discounted weight if any ")?></p>
+            <p><?=__("Enter discounted weight if any. Example 1")?></p>
             </div>
             <?
 
@@ -382,6 +388,7 @@
             $prod_weight_discount = $_POST['product_weight_discount'];
             $prod_stock = $_POST['product_stock'];
             $prod_show_stock = $_POST['product_show_stock'];
+            $prod_price_discount = $_POST['product_price_discount'];
 
             if (!empty($prod_code) && !empty($prod_name)) {
                 update_post_meta($post_id, '_warung_product_code', $prod_code);
@@ -402,13 +409,8 @@
                 }
                 update_post_meta($post_id, '_warung_product_stock', $prod_stock);
                 update_post_meta($post_id, '_warung_product_show_stock', $prod_show_stock);
+                update_post_meta($post_id, '_warung_product_price_discount', $prod_price_discount);
             }
-
-
-            // Do something with $mydata
-            // probably using add_post_meta(), update_post_meta(), or
-            // a custom table (see Further Reading section below)
-
 
         }
 

@@ -66,6 +66,7 @@ class Warung {
 	
 	function formatForSession($product, $opt_id = -1) {
 	    $ret = array();
+	    
 	
 	    if (!empty($product)) {
 	        if (isset($opt_id) && $opt_id != -1) {
@@ -92,11 +93,16 @@ class Warung {
 	            $ret['price'] = $product["price"];
 	            $ret["weight"] = $product["weight"];
 	            $ret['quantity'] = 1;
-	            if (isset ($product->weight_discount) ) {
-	                $ret["weight_discount"] = $product->weight_discount;
+	            if (isset ($product["weight_discount"]) ) {
+	                $ret["weight_discount"] = $product["weight_discount"];
+	            }
+	        	if (isset ($product["price_discount"]) ) {
+	                $ret["price_discount"] = $product["price_discount"];
 	            }
 	        }
 	    }
+	    
+//	    var_dump($ret);
 	
 	    return $ret;
 	}
@@ -193,10 +199,10 @@ class Warung {
 	
 	    if ($post->ID == $co_page) {
 	
-	        $step = $_REQUEST['step'];
-	
-	        if (empty($step)) {
-	            $step = 1;
+	        
+			$step = 1;
+	        if (!empty($_REQUEST['step'])) {
+	        	$step = $_REQUEST['step'];
 	        }
 	
 	        if (!empty($_SESSION['wCart'])) {
@@ -295,6 +301,8 @@ class Warung {
 	            if (isset($product["option_text"])) {
 	                echo stripslashes($product["option_text"]);
 	            }
+	            
+	            $disc_price = $product ['price_discount'];
 	            ?>
 	<div id="wCart_add_2_cart">
 	    <form method="POST">
@@ -332,9 +340,16 @@ class Warung {
 	                            <?
 	                        }
 	                    } else {
-	                ?>
-	        <h2><?=$this->formatCurrency($product["price"])?></h2>
-	                        <?
+	                    	if (isset($disc_price)&&!empty($disc_price)) {
+	                    		?>
+	                    		<h2><s><?=$this->formatCurrency($disc_price)?></s></h2>
+	                    		<h2><?=$this->formatCurrency($product["price"])?></h2>
+	                    		<?
+	                    	} else {
+	                			?>
+	        					<h2><?=$this->formatCurrency($product["price"])?></h2>
+	                        	<?
+	                    	}
 	                    }
 	                    $options = $this->get_options();
 	            ?>
@@ -670,7 +685,7 @@ class Warung {
 	            //name|price[|type]
 	            extract($p);
 	            
-	            $total_price += $p['quantity'] * $p['price'];
+	            $total_price += $p['quantity'] * $price;
 	            $total_weight += $p['quantity'] * $weight;
 	            $total_items += $p['quantity'];
 	
@@ -1001,7 +1016,7 @@ class Warung {
         return $ret;
     }
 
-    function getProductById($post_id) {
+    function getProductById($post_id, $calculateDiscount=true) {
         $ret=array();
 
         $product_code = get_post_meta($post_id, '_warung_product_code', true);
@@ -1013,6 +1028,7 @@ class Warung {
         $product_weight_discount = get_post_meta($post_id, '_warung_product_weight_discount', true);
         $product_stock = get_post_meta($post_id, '_warung_product_stock', true);
         $product_show_stock = get_post_meta($post_id, '_warung_product_show_stock', true);
+        $product_price_discount = get_post_meta($post_id, '_warung_product_price_discount', true);
 
         $post = get_post($post_id);
         if (!empty($post) && empty($product_thumbnail)) {
@@ -1035,6 +1051,24 @@ class Warung {
             $ret["thumbnail"] = $product_thumbnail;
             $ret["stock"] = $product_stock;
             $ret["show_stock"] = $product_show_stock;
+            
+            // check for discount
+         	if (!empty($product_weight_discount)) {
+         		if ( $calculateDiscount ) {
+	                $ret["weight_discount"] = $product_weight_discount;
+	                $ret["weight"] = max(array(0, $product_weight-$product_weight_discount));
+         		} else {
+         			$ret["weight_discount"] = $product_weight_discount;
+         		}
+            }
+            if (!empty($product_price_discount)) {
+            	if ( $calculateDiscount ) {
+	            	$ret["price_discount"] = $product_price;
+	            	$ret["price"] = $product_price_discount;
+            	} else {
+            		$ret["price_discount"] = $product_price_discount;
+            	}
+            }
 
             if (!empty($product_options_name)) {
                 $opts = $this->get_options();
@@ -1055,9 +1089,7 @@ class Warung {
                 }
             }
 
-            if (!empty($product_weight_discount)) {
-                $ret["weight_discount"] = $product_weight_discount;
-            }
+           
 
         }
 
@@ -1077,15 +1109,6 @@ class Warung {
         }
 
         return $ret;
-    }
-
-    function display_meta() {
-        foreach ( array( 'normal', 'advanced', 'side' ) as $context ) {
-            remove_meta_box( 'postcustom', 'post', $context );
-            remove_meta_box( 'postcustom', 'page', $context );
-            //Use the line below instead of the line above for WP versions older than 2.9.1
-            //remove_meta_box( 'pagecustomdiv', 'page', $context );
-        }
     }
 
     //-- util
@@ -1374,7 +1397,7 @@ class WarungCartWidget extends WP_Widget {
         $cartImage = $warung->pluginUrl."images/cart.png";
         $co_page = $warung->get_checkout_url();
         $clear_page = Utils::addParameter(get_option("home"), array("wc_clear"=>"1"));
-        $cart_sumary = get_cart_summary();
+        $cart_sumary = $warung->get_cart_summary();
 
         extract($args);
         $title = apply_filters('widget_title', $instance['title']);
