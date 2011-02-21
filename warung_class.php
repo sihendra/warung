@@ -309,7 +309,7 @@ class Warung {
 	        <input type="hidden" name="product_id" value="<?=$product["id"]?>">
 	                    <?
 	                    if (!empty($product["option_value"])) {
-	                        $isRadioOption = false;
+	                        $isRadioOption = true;
 	                        if ($isRadioOption) {
 	                            foreach($product["option_value"] as $po) {
 	                                $checked = "";
@@ -324,7 +324,7 @@ class Warung {
 	                        } else {
 	                    ?>
 	
-	        <select name="product_option" class="wcart_price">
+	        <select name="product_option" class="wcart_price" size="<?=max(1, sizeof($product["option_value"])/3)?>">
 	                                <?
 	                                foreach($product["option_value"] as $po) {
 	                                    $selected = "";
@@ -707,6 +707,9 @@ class Warung {
 	        $service;
 	
 	        $so = $this->get_shipping_options();
+	        if (!is_object($so)) {
+	        	die('no shipping defined');
+	        }
 	        $sh = $so->getSavedShippingInfo();
 	        $city = $sh['city'];
 	        if (! empty($city) && isset($city->id)) {
@@ -1227,12 +1230,12 @@ class Utils {
                 $pat = '/' . $name_prefix . '[-_]*(\w+)([-_]*(\d+))*/i';
                 if (preg_match($pat, $key, $matches)) {
                     if (isset ($matches[1]) && isset($matches[3])) {
-                        $obj = $ret[intval($matches[3])];
-                        if (empty($obj)) {
+                        if ( empty($ret[intval($matches[3])]) ) {
                             $newObj=null;
                             $newObj->$matches[1] = $val;
                             $ret[intval($matches[3])] = $newObj;
                         } else {
+                        	$obj = $ret[intval($matches[3])];
                             $obj->$matches[1] = $val;
                         }
                     }

@@ -20,6 +20,9 @@
 
             // save hook
             add_action('save_post', array(&$this,'save_product_details'));
+            
+            // add default action
+        	add_action('warung_handle_shipping', array($this, 'handle_byweight_shipping'));
 
         }
 
@@ -202,20 +205,19 @@
             echo $out;
         }
 
-        function handle_shipping() {
-            ob_start();
+        function handle_byweight_shipping() {
+        	ob_start();
 
             $options = $this->warung->get_options();
 
-            if (isset($_POST['shipping_submit'])) {
+            if (isset($_POST['shipping_byweight_submit'])) {
                 //check security
                 if (check_admin_referer('warung-nonce')) {
 
                     if (empty($options) || !is_array($options)) {
                         $options = array();
                     }
-                    $options['shipping_cities']=$_POST['shipping_cities'];
-                    $options['shipping_options']=$_POST['shipping_options'];
+                    $options['shipping_byweight']=Utils::parseParametersToObject($_POST,'shipping');
 
                     update_option(Warung::$db_option, $options);
 
@@ -225,26 +227,48 @@
                 }
             }
 
-            $shipping_cities = $options['shipping_cities'];
-            $shipping_options = $options['shipping_options'];
+            $shipping_options = $options['shipping_byweight'];
 
             ?>
             <div class="wrap" style="max-width:950px !important;">
-                <h2>Shipping Options</h2>
+                <h2>Shipping Services By Weight</h2>
                 <div id="poststuff" style="margin-top:10px;">
                     <div id="mainblock" style="width:810px">
                         <div class="dbx-content">
                             <form action="" method="post">
                                 <?=wp_nonce_field('warung-nonce')?>
-                                <h2>Cities</h2>
-    <!--                            <label for="shipping_cities">Cities</label>-->
-                                <textarea id="shipping_cities" name="shipping_cities" rows="5" cols="50"><?=stripslashes($shipping_cities)?></textarea>
+                                <?
+                                $i = 0;
+                                if (is_array($shipping_options)) {
+                                    foreach ($shipping_options as $key=>$val) {
+                                        $name = '';
+                                        $value = '';
+                                        if (is_object($val)) {
+                                            $name = $val->name;
+                                            $value = $val->value;
+                                        }
+                                        ?>
                                 <br/>
-                                <h2>Services</h2>
-    <!--                            <label for="shipping_options">Shipping Services</label>-->
-                                <textarea id="shipping_options" name="shipping_options" rows="5" cols="50"><?=stripslashes($shipping_options)?></textarea>
+                                <label for="shipping_name-<?=$i?>">Name</label>
+                                <input type="text" id="shipping_name-<?=$i?>" name="shipping_name-<?=$i?>" value="<?=stripslashes($name)?>" />
                                 <br/>
-                                <div class="submit"><input type="submit" name="shipping_submit" value="Update" /></div>
+                                <label for="shipping_value-<?=$i?>">Value</label>
+                                <textarea id="shipping_value-<?=$i?>" name="shipping_value-<?=$i?>" rows="5" cols="50"><?=stripslashes($value)?></textarea>
+                                <br/>
+                                        <?
+                                        $i++;
+                                    }
+                                }
+                                ?>
+                                <br/>
+                                <label for="shipping_name-<?=$i?>">Name</label>
+                                <input type="text" id="shipping_name-<?=$i?>" name="shipping_name-<?=$i?>" value="" />
+                                <br/>
+                                <label for="shipping_value-<?=$i?>">Value</label>
+                                <textarea name="shipping_value-<?=$i?>" id="shipping_value-<?=$i?>" rows="5" cols="50"></textarea>
+                                <br/>
+
+                                <div class="submit"><input type="submit" name="shipping_byweight_submit" value="Update" /></div>
                             </form>
                         </div>
                     </div>
@@ -257,6 +281,10 @@
             ob_end_clean();
 
             echo $out;
+        }
+        
+        function handle_shipping() {
+            do_action('warung_handle_shipping');
         }
 
         function display_product_options() {

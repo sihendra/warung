@@ -20,6 +20,7 @@ if (version_compare($wp_version, "2.6", "<")) {
 }
 
 // includes
+require_once 'warung_includes.php';
 require_once 'warung_class.php';
 require_once 'warung_admin.php';
 
