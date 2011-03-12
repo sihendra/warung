@@ -12,9 +12,20 @@
 */
 
 root { 
-    display: block;
+    display: block; 
 }
 
+/* ###### admin */
+.form-field {
+	display:block;
+	font-weight: bold;
+	padding: 5 0 2 2px;
+}
+
+.form-group {
+	margin-bottom: 10px;	
+	border: 1px solid;
+}
 
 /* ########### SHIPPING FORM ############*/
 #wCart_shipping_form, #order-summary {

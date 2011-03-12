@@ -22,7 +22,8 @@
             add_action('save_post', array(&$this,'save_product_details'));
             
             // add default action
-        	add_action('warung_handle_shipping', array($this, 'handle_byweight_shipping'));
+        	add_action('warung_shipping_options', array($this, 'handle_byweight_shipping'));
+        	add_action('warung_display_product_options', array($this, 'displayProductOptionsWithDiscount'));
 
         }
 
@@ -69,12 +70,19 @@
                         <div class="dbx-content">
                             <form action="" method="post">
                                 <?=wp_nonce_field('warung-nonce')?>
+                                <div class="form-field">
                                 <label for="currency">Currency</label>
-                                <input id="currency" type="text" size="5" name="currency" value="<?=stripslashes($currency)?>"/><br/>
+                                <input id="currency" type="text" size="5" name="currency" value="<?=stripslashes($currency)?>"/>
+                                </div>
+                                <div class="form-field">
                                 <label for="weight_sign">Weight Sign</label>
-                                <input id="weight_sign" type="text" size="5" name="weight_sign" value="<?=stripslashes($weight_sign)?>"/><br/>
+                                <input id="weight_sign" type="text" size="5" name="weight_sign" value="<?=stripslashes($weight_sign)?>"/>
+                                </div>
+                                <div class="form-field">
                                 <label for="add_to_cart">Add to cart text</label>
-                                <input id="add_to_cart" type="text" size="10" name="add_to_cart" value="<?=stripslashes($add2cart)?>"/><br/>
+                                <input id="add_to_cart" type="text" size="10" name="add_to_cart" value="<?=stripslashes($add2cart)?>"/>
+                                </div>
+                                <div class="form-field">
                                 <label for="checkout_page">Checkout Page</label>
                                 <select id="checkout_page" name="checkout_page">
                                 <?
@@ -82,7 +90,9 @@
                                     echo '<option value="'.$page->ID.'"'.($checkout_page == $page->ID ? '"selected=selected"':'').'>'.$page->post_title.'</option>';
                                 }
                                 ?>
-                                </select><br/>
+                                </select>
+                                </div>
+                                <div class="form-field">
                                 <label for="shipping_sim_page">Shipping Sim Page</label>
                                 <select id="shipping_sim_page" name="shipping_sim_page">
                                 <?
@@ -93,7 +103,8 @@
                                     echo '<option value="'.$page->ID.'"'.($shipping_sim_page == $page->ID ? '"selected=selected"':'').'>'.$page->post_title.'</option>';
                                 }
                                 ?>
-                                </select><br/>
+                                </select>
+                                </div>
 
 
 
@@ -163,31 +174,36 @@
                                             $prod = $val;
                                         }
                                         ?>
-                                <br/>
+                                <div class="form-field">
                                 <label for="prod_option_name-<?=$i?>">Name</label>
                                 <input type="text" id="prod_option_name-<?=$i?>" name="prod_option_name-<?=$i?>" value="<?=stripslashes($name)?>" />
-                                <br/>
+                                </div>
+                                <div class="form-field">
                                 <label for="prod_option_value-<?=$i?>">Value</label>
                                 <textarea id="prod_option_value-<?=$i?>" name="prod_option_value-<?=$i?>" rows="5" cols="50"><?=stripslashes($prod)?></textarea>
-                                <br/>
-                                <label for="prod_option_txt-<?=$i?>">Text</label>
+                                </div>
+                                <div class="form-field">
+                                <label for="prod_option_txt-<?=$i?>">Product Info</label>
                                 <textarea id="prod_option_txt-<?=$i?>" name="prod_option_txt-<?=$i?>" rows="5" cols="50"><?=stripslashes($txt)?></textarea>
-                                <br/>
+                                </div>
 
                                         <?
                                         $i++;
                                     }
                                 }
                                 ?>
-                                <br/>
+                                <div class="form-field">
                                 <label for="prod_option_name-<?=$i?>">Name</label>
                                 <input type="text" id="prod_option_name-<?=$i?>" name="prod_option_name-<?=$i?>" value="" />
-                                <br/>
+                                </div>
+                                <div class="form-field">
                                 <label for="prod_option_value-<?=$i?>">Value</label>
                                 <textarea name="prod_option_value-<?=$i?>" id="prod_option_value-<?=$i?>" rows="5" cols="50"></textarea>
-                                <br/>
-                                <label for="prod_option_value-<?=$i?>">Text</label>
+                                </div>
+                                <div class="form-field">
+                                <label for="prod_option_value-<?=$i?>">Product Info</label>
                                 <textarea name="prod_option_txt-<?=$i?>" id="prod_option_txt-<?=$i?>" rows="5" cols="50"></textarea>
+                                </div>
 
 
                                 <div class="submit"><input type="submit" name="product_opt_submit" value="Update" /></div>
@@ -243,30 +259,46 @@
                                     foreach ($shipping_options as $key=>$val) {
                                         $name = '';
                                         $value = '';
+                                        $priority = '';
                                         if (is_object($val)) {
                                             $name = $val->name;
                                             $value = $val->value;
+                                            $priority = $val->priority;
                                         }
                                         ?>
-                                <br/>
-                                <label for="shipping_name-<?=$i?>">Name</label>
+                                <div class="form-group">
+                                <div class="form-field">
+                                <label for="shipping_name-<?=$i?>"><?php _e('Name')?></label>
                                 <input type="text" id="shipping_name-<?=$i?>" name="shipping_name-<?=$i?>" value="<?=stripslashes($name)?>" />
-                                <br/>
-                                <label for="shipping_value-<?=$i?>">Value</label>
+                                </div>
+                                <div class="form-field">
+                                <label for="shipping_priority-<?=$i?>"><?php _e('Priority')?></label>
+                                <input type="text" id="shipping_priority-<?=$i?>" name="shipping_priority-<?=$i?>" value="<?=stripslashes($priority)?>"/>
+                                </div>
+                                <div class="form-field">
+                                <label for="shipping_value-<?=$i?>"><?php _e('Value')?></label>
                                 <textarea id="shipping_value-<?=$i?>" name="shipping_value-<?=$i?>" rows="5" cols="50"><?=stripslashes($value)?></textarea>
-                                <br/>
+                                </div>
+                                </div>
                                         <?
                                         $i++;
                                     }
                                 }
                                 ?>
-                                <br/>
-                                <label for="shipping_name-<?=$i?>">Name</label>
+                                <div class="form-group">
+                                <div class="form-field">
+                                <label for="shipping_name-<?=$i?>"><?php _e('Name')?></label>
                                 <input type="text" id="shipping_name-<?=$i?>" name="shipping_name-<?=$i?>" value="" />
-                                <br/>
-                                <label for="shipping_value-<?=$i?>">Value</label>
+                                </div>
+                                <div class="form-field">
+                                <label for="shipping_priority-<?=$i?>"><?php _e('Priority')?></label>
+                                <input type="text" id="shipping_priority-<?=$i?>" name="shipping_priority-<?=$i?>" value=""/>
+                                </div>
+                                <div class="form-field">
+                                <label for="shipping_value-<?=$i?>"><?php _e('Value')?></label>
                                 <textarea name="shipping_value-<?=$i?>" id="shipping_value-<?=$i?>" rows="5" cols="50"></textarea>
-                                <br/>
+                                </div>
+                                </div>
 
                                 <div class="submit"><input type="submit" name="shipping_byweight_submit" value="Update" /></div>
                             </form>
@@ -284,10 +316,14 @@
         }
         
         function handle_shipping() {
-            do_action('warung_handle_shipping');
+            do_action('warung_shipping_options');
+        }
+        
+        function display_product_options() {
+        	do_action('warung_display_product_options');
         }
 
-        function display_product_options() {
+        function displayProductOptionsWithDiscount() {
             // Use nonce for verification
             global $post;
 
@@ -312,32 +348,32 @@
             </style>
             <div class="form-field">
             <label for="product_code"><?=__("Code")?></label>
-            <input type="text" name="product_code" value="<?=$product["code"]?>"/><br/>
+            <input type="text" name="product_code" value="<?=$product["code"]?>"/>
             <p><?=__("Enter product code")?></p>
             </div>
             <div class="form-field">
             <label for="product_name"><?=__("Name")?></label>
-            <input type="text" name="product_name" value="<?=$product["name"]?>"/><br/>
+            <input type="text" name="product_name" value="<?=$product["name"]?>"/>
             <p><?=__("Enter product name")?></p>
             </div>
             <div class="form-field">
             <label for="product_price"><?=__("Price")?></label>
-            <input type="text" name="product_price" value="<?=$product["price"]?>"/><br/>
+            <input type="text" name="product_price" value="<?=$product["price"]?>"/>
             <p><?=__("Enter product price")?></p>
             </div>
             <div class="form-field ">
                 <label for="product_weight"><?=__("Weight")?></label>
-                <input type="text" name="product_weight" value="<?=$product["weight"]?>"/><br/>
+                <input type="text" name="product_weight" value="<?=$product["weight"]?>"/>
                 <p><?=__("Enter the product weight")?></p>
             </div>
             <div class="form-field ">
             <label for="product_stock"><?=__("Product Stock")?></label>
-            <input type="text" name="product_stock" value="<?=$product["stock"]?>"/><br/>
+            <input type="text" name="product_stock" value="<?=$product["stock"]?>"/>
             <p><?=__("Enter the product stock or leave blank if stock is unlimited.")?></p>
             </div>
             <div class="form-field ">
             <label for="product_show_stock"><?=__("Show Available Product Stock?")?></label>
-            <input type="checkbox" name="product_show_stock" value="show_stock" <?=!empty($product["show_stock"])?'checked="checked"':''?>/><br/>
+            <input type="checkbox" name="product_show_stock" value="show_stock" <?=!empty($product["show_stock"])?'checked="checked"':''?>/>
             <p><?=__("Whether to show product stock number or not")?></p>
             </div>
             <?
@@ -369,14 +405,14 @@
             <h4><?=__("Discount")?></h4>
             <div class="form-field ">
             <label for="product_price_discount"><?=__("Discounted Price")?></label>
-            <input type="text" name="product_price_discount" value="<?=isset($product["price_discount"])?$product["price_discount"]:'';?>"/><br/>
+            <input type="text" name="product_price_discount" value="<?=isset($product["price_discount"])?$product["price_discount"]:'';?>"/>
             <p><?=__("Enter discounted price if any. Example 10000")?></p>
             </div>
             
             <div class="form-field ">
             <label for="product_weight_discount"><?=__("Discounted Weight")?></label>
-            <input type="text" name="product_weight_discount" value="<?=isset($product["weight_discount"])?$product["weight_discount"]:'';?>"/><br/>
-            <p><?=__("Enter discounted weight if any. Example 1")?></p>
+            <input type="text" name="product_weight_discount" value="<?=isset($product["weight_discount"])?$product["weight_discount"]:'';?>"/>
+            <p><?=__("Enter discounted weight if any. Example: 1")?></p>
             </div>
             <?
 
