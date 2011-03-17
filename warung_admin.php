@@ -32,7 +32,9 @@
 
             ob_start();
 
-            $options = $this->warung->get_options();
+            $wo = new WarungOptions();
+
+            $options = $wo->getOptions();
 
             if (isset($_POST['general_submit'])) {
                 //check security
@@ -352,11 +354,6 @@
             <p><?=__("Enter product code")?></p>
             </div>
             <div class="form-field">
-            <label for="product_name"><?=__("Name")?></label>
-            <input type="text" name="product_name" value="<?=$product["name"]?>"/>
-            <p><?=__("Enter product name")?></p>
-            </div>
-            <div class="form-field">
             <label for="product_price"><?=__("Price")?></label>
             <input type="text" name="product_price" value="<?=$product["price"]?>"/>
             <p><?=__("Enter product price")?></p>
@@ -444,8 +441,10 @@
 
             // OK, we're authenticated: we need to find and save the data
 
+            // get product title
+
             $prod_code = $_POST['product_code'];
-            $prod_name = $_POST['product_name'];
+            $prod_name = get_post($post_id)->post_title;
             $prod_price = $_POST['product_price'];
             $prod_weight = $_POST['product_weight'];
             $prod_options = $_POST['product_options'];
@@ -456,7 +455,6 @@
 
             if (!empty($prod_code) && !empty($prod_name)) {
                 update_post_meta($post_id, '_warung_product_code', $prod_code);
-                update_post_meta($post_id, '_warung_product_name', $prod_name);
                 if (empty($prod_price)) {
                     $prod_price = 0;
                 }

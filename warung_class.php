@@ -469,7 +469,7 @@ class Warung {
         $ret = array();
 
         $product_code = get_post_meta($post_id, '_warung_product_code', true);
-        $product_name = get_post_meta($post_id, '_warung_product_name', true);
+        $product_name = get_post_field('post_title', $post_id);
         $product_price = get_post_meta($post_id, '_warung_product_price', true);
         $product_weight = get_post_meta($post_id, '_warung_product_weight', true);
         $product_options_name = get_post_meta($post_id, '_warung_product_options', true);
