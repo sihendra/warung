@@ -30,30 +30,30 @@ class ShippingDestination implements IComparable {
 
     public function equalsCountry($obj) {
         if (is_object($obj)) {
-            return $this->country == $obj->country;
+            return strtolower($this->country) == strtolower($obj->country);
         } else {
-            return $obj == $this->country;
+            return strtolower($obj) == strtolower($this->country);
         }
     }
 
     public function equalsState($obj) {
         if (is_object($obj)) {
-            return $this->state == $obj->state;
+            return strtolower($this->state) == strtolower($obj->state);
         } else {
-            return $obj == $this->state;
+            return strtolower($obj) == strtolower($this->state);
         }
     }
 
     public function equalsCity($obj) {
         if (is_object($obj)) {
-            return $this->city == $obj->city;
+            return strtolower($this->city) == strtolower($obj->city);
         } else {
-            return $obj == $this->city;
+            return strtolower($obj) == strtolower($this->city);
         }
     }
 
     public function key() {
-        return $this->country . '-' . $this->state . '-' . $this->city;
+        return strtolower($this->country . '-' . $this->state . '-' . $this->city);
     }
 
 }
@@ -65,6 +65,7 @@ interface IShippingService {
      * Get the price/destination info from given destination and items
      * @param IShippingDestination $destination
      * @param Array of KeranjangItem $items
+     * @return the price or -1 if destination was not found
      */
     function getPrice($destination, $items);
 
@@ -73,6 +74,11 @@ interface IShippingService {
      */
     function getDestinations();
 
+    /**
+     * Get destination of given param
+     * @param ShippingDestination
+     * @return the ShippingDestination object or null if destination was not found
+     */
     function getDestination($destination);
 
     /**
@@ -317,22 +323,25 @@ class ShippingServiceByWeight extends ShippingService implements IShippingServic
 
     function getPriceByWeight($destination, $weight) {
 
+        $ret = -1;
+
         $tmp;
         if (isset($this->destinations[$destination->key()])) {
             $tmp = $this->destinations[$destination->key()];
         }
 
         if (isset($tmp) && $tmp->minWeight <= $weight) {
-            return $tmp->price * $weight;
+            $ret = $tmp->price * $weight;
         } else {
             foreach ($this->destinations as $dest) {
                 if ($dest->equals($destination) && $dest->minWeight <= $weight) {
-                    return $dest->price * $weight;
+                    $ret = $dest->price * $weight;
+                    break;
                 }
             }
         }
 
-        return 0;
+        return $ret;
     }
 
     function roundWeight($weight) {
@@ -388,7 +397,7 @@ class ShippingServiceByWeightWithDiscount extends ShippingServiceByWeight {
             $total_weight += $weight * $qtt;
 
             // count total weight discount
-            if (isset($destination->discountedWeight)) {
+            if (isset($destination->discountedWeight) && $destination->discountedWeight > 0) {
 
                 // apply weight discount
                 if (isset($item->weightDiscount) && $item->weightDiscount < $weight && $item->weightDiscount > 0) {
@@ -839,7 +848,10 @@ class Kasir implements IKasirService {
             $price = $ss->getPrice($destination, $items);
             $priority = $ss->getPriority();
 
-            $map[$price][$priority] = $ss;
+            if ($price >=0) {
+                $map[$price][$priority] = $ss;
+            }
+
         }
 
         // sort to lowest price
@@ -928,29 +940,31 @@ class WarungKasir extends Kasir {
         $mappedServiceItems = array();
         $otherServiceItems = array();
 
-        foreach ($items as $item) {
-            if (isset($item->category) && isset($this->shippingProductMap[strtolower($item->category)])) {
-                $ss = $this->getShippingServiceByName($this->shippingProductMap[strtolower($item->category)]);
+        if (! empty($items)) {
+            foreach ($items as $item) {
+                if (isset($item->category) && isset($this->shippingProductMap[strtolower($item->category)])) {
+                    $ss = $this->getShippingServiceByName($this->shippingProductMap[strtolower($item->category)]);
 
-                // pisahkan item yang ada di map jika shipping servicenya ada
-                if (isset($ss)) {
-                    $sname = strtolower($ss->getName());
-                    // mapped item
-                    if (isset($mappedServiceItems[$sname])) {
-                        // update
-                        $arr = &$mappedServiceItems[$sname];
-                        $arr[$item->productId] = $item;
+                    // pisahkan item yang ada di map jika shipping servicenya ada
+                    if (isset($ss)) {
+                        $sname = strtolower($ss->getName());
+                        // mapped item
+                        if (isset($mappedServiceItems[$sname])) {
+                            // update
+                            $arr = &$mappedServiceItems[$sname];
+                            $arr[$item->productId] = $item;
+                        } else {
+                            // new
+                            $mappedServiceItems[$sname] = array($item->productId => $item);
+                        }
                     } else {
-                        // new
-                        $mappedServiceItems[$sname] = array($item->productId => $item);
+                        // other item
+                        $otherServiceItems[$item->productId] = $item;
                     }
                 } else {
                     // other item
                     $otherServiceItems[$item->productId] = $item;
                 }
-            } else {
-                // other item
-                $otherServiceItems[$item->productId] = $item;
             }
         }
 
@@ -966,6 +980,7 @@ class WarungKasir extends Kasir {
                 }
             }
         }
+
 
         // process others item
         if (!empty($otherServiceItems)) {
@@ -998,6 +1013,7 @@ class GeneralCheckoutWizard implements ICheckoutWizard {
     public function __construct() {
         $this->warungOption = new WarungOptions();
         $this->actionURL = $this->warungOption->getCheckoutURL();
+        $this->setParameters($_REQUEST);
     }
 
     public function setParameters($parameters) {
@@ -1010,12 +1026,12 @@ class GeneralCheckoutWizard implements ICheckoutWizard {
 
     public function showPage() {
         $p = $this->parameters;
+
         if (isset($p['action'])) {
             $a = $p['action'];
 
-
             $cart = $this->warungOption->getCartService();
-            if ($a == 'confirmation' && $cart->getTotalItems() > 0) {
+            if ($a == 'confirm' && $cart->getTotalItems() > 0) {
                 return $this->showConfirmation();
             } else if ($a == 'payOk') {
                 return $this->showPayOk();
@@ -1058,14 +1074,13 @@ class GeneralCheckoutWizard implements ICheckoutWizard {
 
         $userInfo = $kasir->getSavedUserInfo();
         $destination;
-        // only allow new version, old version city is stored as object
-        if (is_array($userInfo) && isset($userInfo['city']) && !isset($userInfo['city']->name)) {
-            $destination = new ShippingDestination($userInfo['country'], '', $userInfo['city'], 0) ;
+        // only allow new version, old version city is stored as array
+        if (isset($userInfo->city)) {
+            $destination = new ShippingDestination($userInfo->country, '', $userInfo->city, 0) ;
         }
+
         // jika sudah ada destination hitung plus ongkir
         if (isset($destination)) {
-
-
             $cartSum = $kasir->getSummaryWithShippping($destination, $cart, null);
         }
 ?>
@@ -1127,7 +1142,7 @@ class GeneralCheckoutWizard implements ICheckoutWizard {
                 <?
                     if (isset($cartSum->totalShippingPrice)) {
                 ?>
-                        <tr><td colspan="4" class="wcart-td-footer">Ongkos Kirim (<?= $this->formatWeight($cartSum->totalWeight) ?>) </td><td class="wcart-td-footer"><span class="wcart_total"><?= $this->formatCurrency($cartSum->totalShippingPrice) ?></span></td></tr>
+                        <tr><td colspan="4" class="wcart-td-footer">Ongkos Kirim (<?= $this->formatWeight($cartSum->totalWeight) ?>) - <?=$cartSum->shippingName?></td><td class="wcart-td-footer"><span class="wcart_total"><?= $this->formatCurrency($cartSum->totalShippingPrice) ?></span></td></tr>
                         <tr><td colspan="4" class="wcart-td-footer">Total Setelah Ongkos Kirim</td><td class="wcart-td-footer"><span class="wcart_total"><?= $this->formatCurrency($cartSum->totalPrice + $cartSum->totalShippingPrice) ?></span></td></tr>
                 <? } ?>
                 </table>
@@ -1168,8 +1183,11 @@ class GeneralCheckoutWizard implements ICheckoutWizard {
                 $countries = $kasir->getCountries();
                 $country = array_pop($countries);
                 $cities = $kasir->getCitiesByCountry($country);
-                $city = $cities[0];
-                // TODO: get from saved data
+
+                foreach($cities as $city) {
+                    break;
+                }
+
                 if (isset ($userInfo->city)) {
                     $city = $userInfo->city;
                 }
@@ -1179,50 +1197,69 @@ class GeneralCheckoutWizard implements ICheckoutWizard {
                 <div class="wcart_shipping_container">
                     <div><a name="w_shipping"/><h2>Informasi Pengiriman</h2></div>
                     <div id="wCart_shipping_form">
+                        <?if($showUpdateForm) :?>
                         <form method="POST" name="wCart_shipping_form" id="wCart_shipping_form2" action="<?= $this->getActionURL('confirm') ?>">
+                        <? endif; ?>
                             <div class="wCart_form_row">
                                 <label for="semail">Email *</label>
-                <? if ($showUpdateForm) {
- ?>
+                <? if ($showUpdateForm) :?>
                     <input type="text" name="semail" value="<?= $userInfo->email ?>"/>
-<? } else { ?>
+                <? else: ?>
                     <span><?= $userInfo->email ?></span>
-<? } ?>
+                <? endif; ?>
             </div>
 
             <div class="wCart_form_row">
                 <label for="sphone">HP (handphone) *</label>
+                <? if ($showUpdateForm) :?>
                 <input type="text" name="sphone" value="<?= $userInfo->phone ?>"/>
+                <? else: ?>
+                    <span><?= $userInfo->phone ?></span>
+                <? endif; ?>
             </div>
             <div class="wCart_form_row">
                 <label for="sname">Nama Penerima *</label>
+                <? if ($showUpdateForm) :?>
                 <input type="text" name="sname" value="<?= $userInfo->name ?>"/></div>
+                <? else: ?>
+                    <span><?= $userInfo->name ?></span>
+                <? endif; ?>
             <div class="wCart_form_row">
                 <label for="saddress">Alamat *</label>
-                <textarea name="saddress"><?= $userInfo->address ?></textarea></div>
+                <? if ($showUpdateForm) :?>
+                <textarea name="saddress"><?= $userInfo->address ?></textarea>
+                <? else: ?>
+                    <span><?= $userInfo->address ?></span>
+                <? endif; ?>
+            </div>
             <div class="wCart_form_row">
                 <label for="scity">Kota</label>
+                <? if ($showUpdateForm) :?>
 <?= $this->form_select('scity', $cities, $city, array(&$this, 'city_callback'), false) ?>
+                <? else: ?>
+                    <span><?= $userInfo->city ?></span>
+                <? endif; ?>
             </div>
-                            <input type="hidden" name="scountry" value="<?=$userInfo->country?>"/>
+            <input type="hidden" name="scountry" value="<?=$userInfo->country?>"/>
             <div class="wCart_form_row">
                 <label for="sadditional_info">Info Tambahan</label>
+                <? if ($showUpdateForm) :?>
                 <textarea name="sadditional_info"><?= $userInfo->additionalInfo ?></textarea>
+                <? else: ?>
+                    <span><?= $userInfo->additionalInfo ?></span>
+                <? endif; ?>
             </div>
 
 
-            <?
-                if ($showUpdateForm) {
-            ?>
+                <?if($showUpdateForm) :?>
 
                     <div class="wCart_form_row">
                         <input type="hidden" name="step" value="2"/>
                         <input type="submit" name="scheckout" class="submit" value="Lanjut"/>
                     </div>
 
-<? } ?>
-
             </form>
+            <?endif;?>
         </div>
     </div>
 <?
@@ -1233,18 +1270,27 @@ class GeneralCheckoutWizard implements ICheckoutWizard {
             }
 
             public function showConfirmation() {
-                $ret = "Jika data sudah benar, klik tombol 'Pesan' di bawah, atau jika masih ada yang salah klik tombol 'Edit' untuk membenarkan";
-                ;
-                $ret .= $this->showDetailedCart(false);
-                $ret .= $this->showShippingForm(false);
                 ob_start();
-?>
+                
+                $ret = "Jika data sudah benar, klik tombol 'Pesan' di bawah, atau jika masih ada yang salah klik tombol 'Edit' untuk membenarkan";
+
+                // get edit url
+                $wo = new WarungOptions();
+                $editURL= $wo->getCheckoutURL();
+
+                echo $this->showDetailedCart(false);
+                // show edit url
+                ?><p><a class="wcart_button_url" href="<?=$editURL."#w_cart"?>">Edit</a></p><?
+                echo  $this->showShippingForm(false);
+                // show edit url
+                ?><p><a class="wcart_button_url" href="<?=$editURL."#w_shipping"?>">Edit</a></p><?
+                ?>
                 <div style="padding: 10px;">
                     <form method="POST" id="wCart_confirmation" action="<?= $this->getActionURL("pay") ?>">
                         <input type="submit" name="send_order" value="Pesan"/>
                     </form>
                 </div>
-<?
+                <?
                 $ret .= ob_get_contents();
                 ob_end_clean();
 
@@ -1582,19 +1628,19 @@ class GeneralCheckoutWizard implements ICheckoutWizard {
                                 $r = '{' . stripslashes($r) . '}';
                                 $r = json_decode($r);
                                 $freeWeight = 0;
-                                if (isset($r->freeWeight)) {
-                                    $freeWeight = $r->freeWeigth;
+                                if (isset($r->free_weight)) {
+                                    $freeWeight = $r->free_weight;
                                 }
                                 $minWeight = 0;
-                                if (isset($r->minWeight)) {
-                                    $minWeight = $r->minWeight;
+                                if (isset($r->min_weight)) {
+                                    $minWeight = $r->min_weight;
                                 }
                                 $t = new ShippingDestinationByWeight($r->country, $r->state, $r->city, $r->price, $minWeight, $freeWeight);
                                 array_push($dest, $t);
                             }
                             $name = $v->name;
                             $priority = $v->priority;
-                            $s = new ShippingServiceByWeightWithDiscount($dest, $name, $totalWeightRoundingPolicy = 0, $perItemWeightRoundingPolicy = 0, $priority);
+                            $s = new ShippingServiceByWeightWithDiscount($dest, $name, $v->total_weight_rounding, $perItemWeightRoundingPolicy = 0, $priority);
                             array_push($ret, $s);
                         }
                     }

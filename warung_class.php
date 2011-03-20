@@ -59,6 +59,10 @@ class Warung {
 
                 $userInfo = new UserInfo($sname, $semail, $sphone, $sphone, $saddress, $scity, $scountry, $sadditional_info);
                 $kasir->saveUserInfo($userInfo);
+            } else if ($a == 'pay') {
+                // send email
+                // redirect to payOK
+                // redirect to payError
             }
         }
 
@@ -227,8 +231,22 @@ class Warung {
                 if (!empty($product["option_value"])) {
                     $isRadioOption = true;
                     if ($isRadioOption) {
+
+                        $hasDefault = false;
+                        foreach ($product["option_value"] as $po) {
+                            if (isset($po->default)) {
+                                $hasDefault = true;
+                            }
+                        }
+
                         foreach ($product["option_value"] as $po) {
                             $checked = "";
+
+                            // set default to first entry if no default given
+                            if (!$hasDefault && empty($checked)) {
+                                $checked = "checked=checked";
+                            }
+
                             if (isset($po->default)) {
                                 $checked = "checked=checked";
                             }

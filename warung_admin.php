@@ -262,10 +262,12 @@
                                         $name = '';
                                         $value = '';
                                         $priority = '';
+                                        $totalWeightRounding = 0;
                                         if (is_object($val)) {
                                             $name = $val->name;
                                             $value = $val->value;
                                             $priority = $val->priority;
+                                            $totalWeightRounding = $val->total_weight_rounding;
                                         }
                                         ?>
                                 <div class="form-group">
@@ -276,6 +278,14 @@
                                 <div class="form-field">
                                 <label for="shipping_priority-<?=$i?>"><?php _e('Priority')?></label>
                                 <input type="text" id="shipping_priority-<?=$i?>" name="shipping_priority-<?=$i?>" value="<?=stripslashes($priority)?>"/>
+                                </div>
+                                <div class="form-field">
+                                <label for="shipping_total_weight_rounding-<?=$i?>"><?php _e('Total Weight Rounding')?></label>
+                                <select id="shipping_total_weight_rounding-<?=$i?>" name="shipping_total_weight_rounding-<?=$i?>">
+                                    <option value="0" <?=$totalWeightRounding==0?'selected="selected"':''?>><?php _e('None')?></option>
+                                    <option value="1" <?=$totalWeightRounding==1?'selected="selected"':''?>><?php _e('Ceil')?></option>
+                                    <option value="-1" <?=$totalWeightRounding==-1?'selected="selected"':''?>><?php _e('Floor')?></option>
+                                </select>
                                 </div>
                                 <div class="form-field">
                                 <label for="shipping_value-<?=$i?>"><?php _e('Value')?></label>
