@@ -750,6 +750,7 @@ interface IKasirService {
      * @param string $state
      */
     function getCitiesByState($country, $state);
+
 }
 
 class Kasir implements IKasirService {
@@ -1033,10 +1034,56 @@ class GeneralCheckoutWizard implements ICheckoutWizard {
             $cart = $this->warungOption->getCartService();
             if ($a == 'confirm' && $cart->getTotalItems() > 0) {
                 return $this->showConfirmation();
-            } else if ($a == 'payOk') {
-                return $this->showPayOk();
-            } else if ($a == 'payError') {
-                return $this->showPayError();
+            } else if ($a == 'pay') {
+
+                $okMsg = $this->showPayOk();
+                $errMsg = $this->showPayError();
+
+                $warungOpt = new WarungOptions();
+                $kasir = $warungOpt->getKasirService();
+                $userInfo = $kasir->getSavedUserInfo();
+
+                $email_pemesan = $userInfo->email;
+
+                $admin_email = get_option("admin_email");
+                $order_id = date('ymdH') . mt_rand(10, 9999);
+                $subject = "[Warungsprei.com] Pemesanan #" . $order_id;
+                $admin_message = $this->showPayOk($emailView=true, array("order_id" => $order_id));
+                $customer_message = $this->showPayOk($emailView=true, array("order_id" => $order_id));
+
+                $headers = "Content-type: text/html;\r\n";
+                $headers .= "From: Warungsprei.com <info@warungsprei.com>\r\n";
+
+                // send email to admin
+                $ret = mail($admin_email, "[Admin] " . $subject, $admin_message, $headers);
+                
+                // send to pemesan bcc admin
+                $headers .= "Bcc: " . $admin_email . "\r\n";
+                mail($email_pemesan, $subject, $customer_message, $headers);
+
+                $ret= true;
+
+                if ($ret) {
+                    ob_start();
+                ?>
+                    <div class="wcart_info">
+                    <p>Informasi pemesanan juga sudah kami kirim ke <b>'<?= $email_pemesan ?>'.</b> Mohon periksa juga folder <b>'Junk'</b> jika tidak ada di inbox.</p>
+                    </div>
+                    <div class="wcart_general_container">
+                    <?
+                    echo $customer_message;
+                    ?>
+                    </div>
+                    <div><br/><a href="<?= $home_url ?>" class="wcart_button_url">Kembali berbelanja &gt;&gt;</a></div>
+                    <?
+                    $cart->emptyCart();
+                    $ret = ob_get_contents();
+                    ob_get_clean();
+                    return $ret;
+                } else {
+                    return $errMsg;
+                }
+
             }
         }
 
@@ -1297,19 +1344,44 @@ class GeneralCheckoutWizard implements ICheckoutWizard {
                 return $ret;
             }
 
-            public function showPayOk() {
+            public function showPayOk($isEmailView = false, $params=null) {
                 ob_start();
 
-	    $harga_per_kg = -1;
-	    $cs = $this->get_cart_summary();
-	    $so = $this->get_shipping_options();
-	    $sh = $so->getSavedShippingInfo();
+                $warungOpt = new WarungOptions();
+                $cart = $warungOpt->getCartService();
+                $kasir = $warungOpt->getKasirService();
 
-	    if ($isEmailView) {
-	        extract($sh);
+                $cartEntry;
+                $cartSum;
+                if (!empty($cart)) {
+                    $cartEntry = $cart->getItems();
+                    $cartSum = $cart->getSummary();
+                }
+
+                $userInfo = $kasir->getSavedUserInfo();
+                $destination;
+                // only allow new version, old version city is stored as array
+                if (isset($userInfo->city)) {
+                    $destination = new ShippingDestination($userInfo->country, '', $userInfo->city, 0) ;
+                }
+
+                // jika sudah ada destination hitung plus ongkir
+                if (isset($destination)) {
+                    $cartSum = $kasir->getSummaryWithShippping($destination, $cart, null);
+                }
+
+                if (!empty($cartItems)) {
+                    ob_end_clean();
+                    return __('Keranjang belanja kosong');
+                }
+
+                if (is_array($params)) {
+                    extract($params);
+                }
+
 	        ?>
 	        <div>
-	            <p><?=$name?>, kami sudah menerima pesanan anda. Untuk pembayaran silahkan transfer ke salah satu nomor rekening berikut sebesar <b><?=$this->formatCurrency($cs['total_price']+$cs['total_ongkir'])?></b>:
+	            <p><?=$userInfo->name?>, kami sudah menerima pesanan anda. Untuk pembayaran silahkan transfer ke salah satu nomor rekening berikut sebesar <b><?=$this->formatCurrency($cartSum->totalPrice + $cartSum->totalShippingPrice)?></b>:
 	            <ul>
 	            <li>BCA: 5800106950 a.n. Hendra Setiawan</li>
 	            <li>Mandiri: 1270005578586 a.n. Hendra Setiawan</li>
@@ -1330,7 +1402,7 @@ class GeneralCheckoutWizard implements ICheckoutWizard {
 	            <br/>
 	            <?
 	            // ####### show detailed cart
-	            echo $this->show_detailed_cart(false);
+	            echo $this->showDetailedCart(false);
 
 	            // ####### show shipping info
 	            ?>
@@ -1341,78 +1413,27 @@ class GeneralCheckoutWizard implements ICheckoutWizard {
 	            <table>
 	            <?
 
-	            // show limited info
-	            $total_weight = $cs['total_weight'];
-	            $ss = $so->getCheapestServices($city->id, $total_weight);
-
 	            ?>
-	                <tr><td>Email</td><td>&nbsp;:&nbsp;</td><td><?=$email?></td></tr>
-	                <tr><td>Telepon</td><td>&nbsp;:&nbsp;</td><td><?=$phone?></td></tr>
-	                <tr><td>Jasa Pengiriman</td><td>&nbsp;:&nbsp;</td><td><?=$ss->name?></td></tr>
-	                <tr><td>Nama Penerima</td><td>&nbsp;:&nbsp;</td><td><?=$name?></td></tr>
-	                <tr><td>Alamat</td><td>&nbsp;:&nbsp;</td><td><?=$address?></td></tr>
-	                <tr><td>Kota</td><td>&nbsp;:&nbsp;</td><td><?=$city->name?></td></tr>
-	                <tr><td>Info Tambahan</td><td>&nbsp;:&nbsp;</td><td><?=$additional_info?></td></tr>
-	            <?
-	            if ($isAdminView) {
-	            ?>
-	                <tr><td>Harga Per Kg</td><td>&nbsp;:&nbsp;</td><td><?=$cs['harga_per_kg']?></td></tr>
-	            <?
-	            }
-	            ?>
+	                <tr><td>Email</td><td>&nbsp;:&nbsp;</td><td><?=$userInfo->email?></td></tr>
+	                <tr><td>Telepon</td><td>&nbsp;:&nbsp;</td><td><?=$userInfo->phone?></td></tr>
+	                <tr><td>Jasa Pengiriman</td><td>&nbsp;:&nbsp;</td><td><?=$cartSum->shippingName?></td></tr>
+	                <tr><td>Nama Penerima</td><td>&nbsp;:&nbsp;</td><td><?=$userInfo->name?></td></tr>
+	                <tr><td>Alamat</td><td>&nbsp;:&nbsp;</td><td><?=$userInfo->address?></td></tr>
+	                <tr><td>Kota</td><td>&nbsp;:&nbsp;</td><td><?=$userInfo->city?></td></tr>
+	                <tr><td>Info Tambahan</td><td>&nbsp;:&nbsp;</td><td><?=$userInfo->additionalInfo?></td></tr>
+	            
 	            </table>
 	        </div>
 	        <?
-	    } else {
-	        ?>
-	        <div id="order-summary">
-	        <?
-	            // ####### show cart
-	            echo $this->show_detailed_cart(false);
-	            ?>
-	            <p><a href="<?=$this->get_checkout_url()?>#w_cart" class="wcart_button_url">Edit</a></p>
-	            <br/>
-	            <br/>
-	            <!--shipping info-->
-	            <div><h2>Informasi Pengiriman</h2></div>
-	            <table>
-	            <?
-	            // show limited info
 
-	            extract($sh);
+                $ret = ob_get_contents();
+                ob_end_clean();
 
-	            $total_weight = $cs['total_weight'];
-	            $ss = $so->getCheapestServices($city->id, $total_weight);
-
-	            ?>
-	                <tr><td>Email</td><td>&nbsp;:&nbsp;</td><td><?=$email?></td></tr>
-	                <tr><td>Telepon</td><td>&nbsp;:&nbsp;</td><td><?=$phone?></td></tr>
-	                <tr><td>Jasa Pengiriman</td><td>&nbsp;:&nbsp;</td><td><?=$ss->name?></td></tr>
-	                <tr><td>Nama Penerima</td><td>&nbsp;:&nbsp;</td><td><?=$name?></td></tr>
-	                <tr><td>Alamat</td><td>&nbsp;:&nbsp;</td><td><?=$address?></td></tr>
-	                <tr><td>Kota</td><td>&nbsp;:&nbsp;</td><td><?=$city->name?></td></tr>
-	                <tr><td>Info Tambahan</td><td>&nbsp;:&nbsp;</td><td><?=$additional_info?></td></tr>
-	            <?
-	                if ($isAdminView) {
-	            ?>
-	                <tr><td>Harga Per Kg</td><td>&nbsp;:&nbsp;</td><td><?=$cs['harga_per_kg']?></td></tr>
-	            <?
-	            }
-	            ?>
-	            </table>
-	            <p><a href="<?=$this->get_checkout_url()?>#w_shipping" class="wcart_button_url">Edit</a></p>
-	        </div>
-	        <?
-	    }
-
-	    $ret = ob_get_contents();
-	    ob_end_clean();
-
-	    return $ret;
+                return $ret;
             }
 
-            public function showPayError() {
-                echo '<p>Maaf pay error</p>';
+            public function showPayError($isEmailView = false, $params=null) {
+                return '<p>'.__('Maaf kami blm dapat memproses pesanan anda silahkan coba beberapa saat lagi').'</p>';
             }
 
             function getActionURL($action, $params=null) {
