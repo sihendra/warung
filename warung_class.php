@@ -29,6 +29,17 @@ class Warung {
         $this->process_params();
     }
 
+    function init_scripts() {
+        wp_enqueue_script('jquery');
+        wp_enqueue_script('jquery-form'); //, $this->pluginUrl.'scripts/jquery.form.js',array('jquery'));
+        wp_enqueue_script('jquery_validaton', $this->pluginUrl . 'scripts/jquery.validate.js', array('jquery'));
+        wp_enqueue_script('warung_js', $this->pluginUrl . 'scripts/warung.js', array('jquery'));
+    }
+
+    function init_styles() {
+        wp_enqueue_style('warung_style', $this->pluginUrl . 'style/warung.css');
+    }
+
     function process_params() {
         // update cart
         // parse action
@@ -365,17 +376,6 @@ class Warung {
     function install() {
         // set default options
         $this->get_options();
-    }
-
-    function init_scripts() {
-        wp_enqueue_script('jquery');
-        wp_enqueue_script('jquery-form'); //, $this->pluginUrl.'scripts/jquery.form.js',array('jquery'));
-        wp_enqueue_script('jquery_validaton', $this->pluginUrl . 'scripts/jquery.validate.js', array('jquery'));
-        wp_enqueue_script('warung_js', $this->pluginUrl . 'scripts/warung.js', array('jquery'));
-    }
-
-    function init_styles() {
-        wp_enqueue_style('warung_style', $this->pluginUrl . 'style/warung.css');
     }
 
     function formatCurrency($price) {
