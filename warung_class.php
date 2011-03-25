@@ -68,8 +68,12 @@ class Warung {
                 $kasir = $warungOpt->getKasirService();
                 extract($_REQUEST);
 
-                $userInfo = new UserInfo($sname, $semail, $sphone, $sphone, $saddress, $scity, $scountry, $sadditional_info);
-                $kasir->saveUserInfo($userInfo);
+                if (isset($sname) && !empty($sname)) {
+                    $userInfo = new UserInfo($sname, $semail, $sphone, $sphone, $saddress, $scity, $scountry, $sadditional_info);
+                    $kasir->saveUserInfo($userInfo);
+                }
+
+
             } else if ($a == 'pay') {
                 // send email
                 // redirect to payOK

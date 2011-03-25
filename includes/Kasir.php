@@ -26,7 +26,7 @@ class Kasir implements IKasirService {
             'additional_info' => $userInfo->additionalInfo
         );
 
-        $_SESSION[WarungOptions::$SHIPPING_SESS_NAME] = serialize($tmp);
+        $_COOKIE[WarungOptions::$SHIPPING_SESS_NAME] = serialize($tmp);
         setcookie(WarungOptions::$SHIPPING_SESS_NAME, serialize($tmp), time() + 60 * 60 * 24 * 30); // save 1 month
     }
 
@@ -41,9 +41,7 @@ class Kasir implements IKasirService {
             'additional_info' => ''
         );
 
-        if (isset($_SESSION[WarungOptions::$SHIPPING_SESS_NAME])) {
-            $tmp_info = unserialize(stripslashes($_SESSION[WarungOptions::$SHIPPING_SESS_NAME]));
-        } else if (isset($_COOKIE[WarungOptions::$SHIPPING_SESS_NAME])) {
+        if (isset($_COOKIE[WarungOptions::$SHIPPING_SESS_NAME])) {
             $tmp_info = unserialize(stripslashes($_COOKIE[WarungOptions::$SHIPPING_SESS_NAME]));
         }
 

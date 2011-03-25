@@ -4,7 +4,7 @@ class WarungOptions {
 
     public static $OPT_NAME = 'Warung_Options';
     public static $CART_SESS_NAME = 'wCart';
-    public static $SHIPPING_SESS_NAME = 'wCartShipping';
+    public static $SHIPPING_SESS_NAME = 'wShipping';
 
 
     private $options;

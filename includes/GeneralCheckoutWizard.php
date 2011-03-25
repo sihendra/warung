@@ -28,56 +28,59 @@ class GeneralCheckoutWizard implements ICheckoutWizard {
             $a = $p['action'];
 
             $cart = $this->warungOption->getCartService();
-            if ($a == 'confirm' && $cart->getTotalItems() > 0) {
-                return $this->showConfirmation();
-            } else if ($a == 'pay') {
+            if ($cart->getTotalItems() > 0) {
+                if ($a == 'confirm') {
+                    return $this->showConfirmation();
+                } else if ($a == 'pay') {
 
-                $okMsg = $this->showPayOk();
-                $errMsg = $this->showPayError();
+                    $okMsg = $this->showPayOk();
+                    $errMsg = $this->showPayError();
 
-                $warungOpt = new WarungOptions();
-                $kasir = $warungOpt->getKasirService();
-                $userInfo = $kasir->getSavedUserInfo();
+                    $warungOpt = new WarungOptions();
+                    $kasir = $warungOpt->getKasirService();
+                    $userInfo = $kasir->getSavedUserInfo();
 
-                $email_pemesan = $userInfo->email;
+                    $email_pemesan = $userInfo->email;
 
-                $admin_email = get_option("admin_email");
-                $order_id = date('ymdH') . mt_rand(10, 9999);
-                $subject = "[Warungsprei.com] Pemesanan #" . $order_id;
-                $admin_message = $this->showPayOk($emailView = true, array("order_id" => $order_id));
-                $customer_message = $this->showPayOk($emailView = true, array("order_id" => $order_id));
+                    $admin_email = get_option("admin_email");
+                    $order_id = date('ymdH') . mt_rand(10, 9999);
+                    $subject = "[Warungsprei.com] Pemesanan #" . $order_id;
+                    $admin_message = $this->showPayOk($emailView = true, array("order_id" => $order_id));
+                    $customer_message = $this->showPayOk($emailView = true, array("order_id" => $order_id));
 
-                $headers = "Content-type: text/html;\r\n";
-                $headers .= "From: Warungsprei.com <info@warungsprei.com>\r\n";
+                    $headers = "Content-type: text/html;\r\n";
+                    $headers .= "From: Warungsprei.com <info@warungsprei.com>\r\n";
 
-                // send email to admin
-                $ret = mail($admin_email, "[Admin] " . $subject, $admin_message, $headers);
+                    // send email to admin
+                    $ret = mail($admin_email, "[Admin] " . $subject, $admin_message, $headers);
 
-                // send to pemesan bcc admin
-                $headers .= "Bcc: " . $admin_email . "\r\n";
-                mail($email_pemesan, $subject, $customer_message, $headers);
+                    // send to pemesan bcc admin
+                    $headers .= "Bcc: " . $admin_email . "\r\n";
+                    mail($email_pemesan, $subject, $customer_message, $headers);
 
-                $ret = true;
+                    $ret = true;
 
-                if ($ret) {
-                    ob_start();
-?>
-                    <div class="wcart_info">
-                        <p>Informasi pemesanan juga sudah kami kirim ke <b>'<?= $email_pemesan ?>'.</b> Mohon periksa juga folder <b>'Junk'</b> jika tidak ada di inbox.</p>
+                    if ($ret) {
+                        $home_url = get_option('home');
+                        ob_start();
+    ?>
+                        <div class="wcart_info">
+                            <p>Informasi pemesanan juga sudah kami kirim ke <b>'<?= $email_pemesan ?>'.</b> Mohon periksa juga folder <b>'Junk'</b> jika tidak ada di inbox.</p>
+                        </div>
+                        <div class="wcart_general_container">
+    <?
+                        echo $customer_message;
+    ?>
                     </div>
-                    <div class="wcart_general_container">
-<?
-                    echo $customer_message;
-?>
-                </div>
-                <div><br/><a href="<?= $home_url ?>" class="wcart_button_url">Kembali berbelanja &gt;&gt;</a></div>
-<?
-                    $cart->emptyCart();
-                    $ret = ob_get_contents();
-                    ob_get_clean();
-                    return $ret;
-                } else {
-                    return $errMsg;
+                    <div><br/><a href="<?= $home_url ?>" class="wcart_button_url">Kembali berbelanja &gt;&gt;</a></div>
+    <?
+                        $cart->emptyCart();
+                        $ret = ob_get_contents();
+                        ob_get_clean();
+                        return $ret;
+                    } else {
+                        return $errMsg;
+                    }
                 }
             }
         }
