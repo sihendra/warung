@@ -101,7 +101,7 @@ class KeranjangService implements IKeranjangService {
 
     function emptyCart() {
         unset($this->items);
-        unset($_SESSION[SWarungOptions::$CART_SESS_NAME]);
+        unset($_SESSION[WarungOptions::$CART_SESS_NAME]);
     }
 
     function getItems() {
