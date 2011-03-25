@@ -85,8 +85,8 @@ class WarungAdmin {
                         <label for="checkout_page">Checkout Page</label>
                         <select id="checkout_page" name="checkout_page">
 <?
-        foreach (get_pages () as $page) {
-            echo '<option value="' . $page->ID . '"' . ($checkout_page == $page->ID ? '"selected=selected"' : '') . '>' . $page->post_title . '</option>';
+        foreach (get_pages () as $p) {
+            echo '<option value="' . $p->ID . '"' . ($checkout_page == $p->ID ? 'selected=selected' : '') . '>' . $p->post_title . '</option>';
         }
 ?>
                         </select>
@@ -98,8 +98,8 @@ class WarungAdmin {
         if (empty($shipping_sim_page)) {
             echo '<option value="" selected="selected">-- Please Select --</option>';
         }
-        foreach (get_pages () as $page) {
-            echo '<option value="' . $page->ID . '"' . ($shipping_sim_page == $page->ID ? '"selected=selected"' : '') . '>' . $page->post_title . '</option>';
+        foreach (get_pages () as $p) {
+            echo '<option value="' . $p->ID . '"' . ($shipping_sim_page == $p->ID ? 'selected=selected' : '') . '>' . $p->post_title . '</option>';
         }
 ?>
                         </select>
