@@ -111,18 +111,35 @@ class WarungOptions {
                     $tdest = explode("\n", $v->value);
                     $dest = array();
                     foreach ($tdest as $r) {
-                        $r = '{' . stripslashes($r) . '}';
-                        $r = json_decode($r);
-                        $freeWeight = 0;
-                        if (isset($r->free_weight)) {
-                            $freeWeight = $r->free_weight;
+                        // skip empty line
+                        if (!empty($r)) {
+                            $r = '{' . stripslashes($r) . '}';
+                            // to lowercase all
+                            $r = json_decode(strtolower($r));
+                            $freeWeight = 0;
+                            if (isset($r->free_weight)) {
+                                $freeWeight = $r->free_weight;
+                            }
+                            $minWeight = 0;
+                            if (isset($r->min_weight)) {
+                                $minWeight = $r->min_weight;
+                            }
+
+                            // Upper First Character
+                            if (isset ($r->country)) {
+                                $r->country = ucwords($r->country);
+                            }
+                            if (isset ($r->state)) {
+                                $r->state = ucwords($r->state);
+                            }
+                            if (isset ($r->city)) {
+                                $r->city = ucwords($r->city);
+                            }
+
+
+                            $t = new ShippingDestinationByWeight($r->country, $r->state, $r->city, $r->price, $minWeight, $freeWeight);
+                            array_push($dest, $t);
                         }
-                        $minWeight = 0;
-                        if (isset($r->min_weight)) {
-                            $minWeight = $r->min_weight;
-                        }
-                        $t = new ShippingDestinationByWeight($r->country, $r->state, $r->city, $r->price, $minWeight, $freeWeight);
-                        array_push($dest, $t);
                     }
                     $name = $v->name;
                     $priority = $v->priority;

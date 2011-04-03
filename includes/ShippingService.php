@@ -58,7 +58,9 @@ abstract class ShippingService implements IShippingService {
 
         if (empty($this->countries)) {
             foreach ($this->destinations as $dest) {
-                $this->countries[(string) $dest->country] = $dest->country;
+                if (!empty($dest->country)) {
+                    $this->countries[(string) $dest->country] = $dest->country;
+                }
             }
             $ret = $this->countries;
         } else {
@@ -71,11 +73,19 @@ abstract class ShippingService implements IShippingService {
     function getStates($country) {
         $ret = array();
 
+        // validate parameter
+        if (empty($country)){
+            return $ret;
+        }
+
         if (empty($this->statesByCountry) || empty($this->statesByCountry[$country])) {
             $this->statesByCountry[$country] = array();
             foreach ($this->destinations as $dest) {
                 if ($dest->country == $country) {
-                    $this->statesByCountry[$country][$dest->state] = $dest->state;
+                    // check state not empty
+                    if (!empty($dest->state)) {
+                        $this->statesByCountry[$country][$dest->state] = $dest->state;
+                    }
                 }
             }
             $ret = $this->statesByCountry[$country];
@@ -89,11 +99,19 @@ abstract class ShippingService implements IShippingService {
     function getCities($country) {
         $ret = array();
 
+        // validate parameter
+        if (empty($country)){
+            return $ret;
+        }
+
         if (empty($this->citiesByCountry) || empty($this->citiesByCountry[$country])) {
             $this->citiesByCountry[$country] = array();
             foreach ($this->destinations as $dest) {
                 if ($dest->country == $country) {
-                    $this->citiesByCountry[$country][$dest->city] = $dest->city;
+                    // check city not empty
+                    if (!empty($dest->city)) {
+                        $this->citiesByCountry[$country][$dest->city] = $dest->city;
+                    }
                 }
             }
             $ret = $this->citiesByCountry[$country];
@@ -106,6 +124,11 @@ abstract class ShippingService implements IShippingService {
 
     function getCitiesByState($country, $state) {
         $ret = array();
+
+        // validate parameter
+        if (empty($country)){
+            return $ret;
+        }
 
         if (empty($this->citiesByState) || empty($this->citiesByState[$country . '-' . $state])) {
             $this->citiesByState[$country . '-' . $state] = array();
