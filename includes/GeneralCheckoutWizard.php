@@ -120,7 +120,7 @@ class GeneralCheckoutWizard implements ICheckoutWizard {
         $destination;
         // only allow new version, old version city is stored as array
         if (isset($userInfo->city)) {
-            $destination = new ShippingDestination($userInfo->country, '', $userInfo->city, 0);
+            $destination = new ShippingDestination($userInfo->country, $userInfo->state, $userInfo->city, 0);
         }
 
         // jika sudah ada destination hitung plus ongkir
