@@ -15,6 +15,10 @@ class WarungAdmin {
         add_submenu_page(__FILE__, 'Warung Shipping', 'Shipping', 'administrator', __FILE__ . '_shipping', array(&$this, 'handle_shipping'));
         add_submenu_page(__FILE__, 'Warung Product Options', 'Product Options', 'administrator', __FILE__ . '_product_option', array(&$this, 'handle_product_opt'));
 
+
+        $orderAdmin = new WarungAdminOrder();
+        add_submenu_page(__FILE__, 'Warung Orders', 'Orders', 'administrator', dirname(__FILE__) . '/WarungAdminOrder.php', array(&$orderAdmin, 'handle_orders'));
+
         // add metabox in edit post page
         add_meta_box('warung-product-id', 'Product Information', array(&$this, 'display_product_options'), 'post', 'normal', 'high');
 

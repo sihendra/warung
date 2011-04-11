@@ -9,6 +9,7 @@ class UserInfo {
     public $phone;
     public $address;
     public $city;
+    public $state;
     public $country;
     public $additionalInfo;
 

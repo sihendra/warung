@@ -42,8 +42,21 @@ class GeneralCheckoutWizard implements ICheckoutWizard {
 
                     $email_pemesan = $userInfo->email;
 
+                    //save order
+
+                    $order = new Order();
+                    $order->items = $cart->getItems();
+                    $order->itemsPrice = $cart->getTotalPrice();
+                    $order->shippingInfo = $userInfo;
+                    $order->buyerInfo= $userInfo;
+                    $order->shippingWeight = $cart->getTotalWeight();
+
+                    $orderService = new OrderService();
+                    $order_id = $orderService->putOrder($order);
+
+                    // done save order
+
                     $admin_email = get_option("admin_email");
-                    $order_id = date('ymdH') . mt_rand(10, 9999);
                     $subject = "[Warungsprei.com] Pemesanan #" . $order_id;
                     $admin_message = $this->showPayOk($emailView = true, array("order_id" => $order_id));
                     $customer_message = $this->showPayOk($emailView = true, array("order_id" => $order_id));
