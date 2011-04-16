@@ -26,7 +26,9 @@ interface IOrderService {
 
     function updateDeliveryNumber($orderId, $delivNum);
 
+
     function getOrderById($orderId);
     function getAllOrders();
+    function getAllStatus();
 }
 ?>

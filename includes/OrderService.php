@@ -17,8 +17,8 @@ class OrderService implements IOrderService {
 
     // update statuses
     public static $STATUS_ORDERED = "ordered";
-    public static $STATUS_PAYMENT_VERIFIED = "payment verified";
-    public static $STATUS_PAYMENT_NOT_VERIFIED= "payment not verified";
+    public static $STATUS_PAYMENT_VERIFIED = "payment_verified";
+    public static $STATUS_PAYMENT_NOT_VERIFIED= "payment_not_verified";
     public static $STATUS_DELIVERED = "delivered";
     public static $STATUS_RECEIVED = "received";
     public static $STATUS_CANCELED = "canceled";
@@ -187,7 +187,7 @@ class OrderService implements IOrderService {
             $params = array($status);
             $others = "";
             if ($status == self::$STATUS_DELIVERED) {
-                $others .= ", dtdelivered=%s ";
+                $others .= ", dtdelivery=%s ";
                 array_push($params, date('Y-m-d H:i:s'));
             } else if ($status == self::$STATUS_PAYMENT_VERIFIED) {
                 $others .= ", dtpayment=%s ";
@@ -316,6 +316,17 @@ class OrderService implements IOrderService {
 
         return $wpdb->query($sql);
 
+    }
+
+    public function getAllStatus() {
+        $ret = array();
+        $ret[self::$STATUS_ORDERED]="Ordered";
+        $ret[self::$STATUS_PAYMENT_VERIFIED]="Payment Verified";
+        $ret[self::$STATUS_PAYMENT_NOT_VERIFIED]="Payment Not Verified";
+        $ret[self::$STATUS_DELIVERED]="Delivered";
+        $ret[self::$STATUS_RECEIVED]="Received";
+        $ret[self::$STATUS_CANCELED]="Canceled";
+        return $ret;
     }
 }
 ?>
