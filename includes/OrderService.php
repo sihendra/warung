@@ -32,14 +32,25 @@ class OrderService implements IOrderService {
     }
 
     //put your code here
-    public function getAllOrders() {
+    public function getAllOrders($showPerPage=10, $page=1, $orderBy='id') {
         global $wpdb;
 
         $ret = array();
+        $rows = array();
 
-        $sql = "SELECT id, dtcreated, status, dtlastupdated, items_price, shipping_price, dtpayment, dtdelivery, delivery_number
+        // count all
+        $sql = "SELECT count(*)
+                  FROM $this->orderTable";
+        $totalRow = $wpdb->get_var($wpdb->prepare($sql));
+        $totalPage = ceil($totalRow / $showPerPage);
+        $offset = ($page-1)*($showPerPage);
+        if ($page==$totalPage && $totalRow%$showPerPage > 0) {
+            $showPerPage = $totalRow%$showPerPage;
+        }
+
+        $sql = $wpdb->prepare("SELECT id, dtcreated, status, dtlastupdated, items_price, shipping_price, dtpayment, dtdelivery, delivery_number
                   FROM $this->orderTable
-                 ORDER BY id DESC";
+                 ORDER BY $orderBy DESC LIMIT %d,%d", $offset, $showPerPage);
 
         $result = $wpdb->get_results($sql);
 
@@ -96,9 +107,16 @@ class OrderService implements IOrderService {
                     }
                 }
 
-                array_push($ret, $order);
+                array_push($rows, $order);
             }
         }
+
+        $ret['data'] = $rows;
+        $ret['totalRow'] = $totalRow;
+        $ret['totalPage'] = $totalPage;
+        $ret['offset'] = $offset;
+        $ret['showPerPage'] = $showPerPage;
+        $ret['page'] = $page;
 
         return $ret;
     }

@@ -12,7 +12,6 @@
 class WarungAdminOrder {
     function handle_orders() {
         $orderService = new OrderService();
- 
 
         //check_admin_referer('warung-nonce')
         if ( !empty($_REQUEST['wrg_order_status_submit'])
@@ -22,12 +21,27 @@ class WarungAdminOrder {
             $orderService->updateStatus($_REQUEST['wrg_order_status_id'], $_REQUEST['wrg_order_status_status']);
         }
 
-        $orders = $orderService->getAllOrders();
+        // nav
+        $page = 1;
+        if (isset($_REQUEST['wrg_order_page'])) {
+            $page = $_REQUEST['wrg_order_page'];
+        }
+
+        $orders = $orderService->getAllOrders(5, $page);
+        $orderData = array();
+        if (isset($orders['data'])) {
+            $orderData = $orders['data'];
+        }
+
+        $pageNav = new PageNav('wrg_order_page', $orders);
+
         $orderStatuses = $orderService->getAllStatus();
         
         ?>
 <div class="wrap">
     <h2>Order</h2>
+    <div class="tablenav"><?=$pageNav->show(' ', '«', '»')?></div>
+    <div class="clear"></div>
     <table class="wp-list-table widefat">
         <thead>
             <tr>
@@ -57,7 +71,7 @@ class WarungAdminOrder {
 
 	<tbody id="the-list">
 <?
-        foreach($orders as $order) {
+        foreach($orderData as $order) {
 ?>
         <tr id="order-<?=$order->id?>" class="alternate author-self status-publish format-default iedit" valign="top">
             <th scope="row" class="check-column"><input name="post[]" value="1" type="checkbox"></th>
@@ -81,6 +95,7 @@ class WarungAdminOrder {
 ?>
         </tbody>
     </table>
+    <div class="tablenav"><?=$pageNav->show(' ', '«', '»')?></div>
 </div>
 <?
     }
