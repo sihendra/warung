@@ -32,7 +32,7 @@ CREATE TABLE `wp_wrg_order` (
   `delivery_number` varchar(100) DEFAULT NULL,
   `shipping_weight` float NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 /*Table structure for table `wp_wrg_order_items` */
 

@@ -21,13 +21,23 @@ class WarungAdminOrder {
             $orderService->updateStatus($_REQUEST['wrg_order_status_id'], $_REQUEST['wrg_order_status_status']);
         }
 
+        // current url
+        $pageURL = "http://" . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . "?" . $_SERVER['QUERY_STRING'];
+
         // nav
         $page = 1;
         if (isset($_REQUEST['wrg_order_page'])) {
             $page = $_REQUEST['wrg_order_page'];
         }
 
-        $orders = $orderService->getAllOrders(5, $page);
+        // order by
+        $orderBy = 'id';
+        if (isset($_REQUEST['wrg_order_sortby'])) {
+            $orderBy = $_REQUEST['wrg_order_sortby'];
+        }
+        $orderByStatusURL = URLUtil::updateParams($pageURL, array("wrg_order_sortby"=>"status"));
+
+        $orders = $orderService->getAllOrders(5, $page, $orderBy);
         $orderData = array();
         if (isset($orders['data'])) {
             $orderData = $orders['data'];
@@ -51,7 +61,7 @@ class WarungAdminOrder {
                 <th scope="col" id="buyer" class="manage-column column-author sortable desc" style=""><a href="http://localhost/%7Ehendra/wp/wp-admin/edit.php?orderby=author&amp;order=asc"><span>Buyer</span><span class="sorting-indicator"></span></a></th>
                 <th scope="col" id="items" class="manage-column column-categories" style="">Items</th>
                 <th scope="col" id="shipping" class="manage-column column-tags" style="">Shipping</th>
-                <th scope="col" id="status" class="manage-column column-comments num sortable desc" style=""><a href="http://localhost/%7Ehendra/wp/wp-admin/edit.php?orderby=comment_count&amp;order=asc"><span>Status</span><span class="sorting-indicator"></span></a></th>
+                <th scope="col" id="status" class="manage-column column-comments num sortable desc" style=""><a href="<?=$orderByStatusURL?>"><span>Status</span><span class="sorting-indicator"></span></a></th>
                 <th scope="col" id="updatedate" class="manage-column column-date sortable asc" style=""><a href="http://localhost/%7Ehendra/wp/wp-admin/edit.php?orderby=date&amp;order=desc"><span>Last Update</span><span class="sorting-indicator"></span></a></th>
             </tr>
 	</thead>
@@ -64,13 +74,15 @@ class WarungAdminOrder {
                 <th scope="col" id="buyer" class="manage-column column-author sortable desc" style=""><a href="http://localhost/%7Ehendra/wp/wp-admin/edit.php?orderby=author&amp;order=asc"><span>Buyer</span><span class="sorting-indicator"></span></a></th>
                 <th scope="col" id="items" class="manage-column column-categories" style="">Items</th>
                 <th scope="col" id="shipping" class="manage-column column-tags" style="">Shipping</th>
-                <th scope="col" id="status" class="manage-column column-comments num sortable desc" style=""><a href="http://localhost/%7Ehendra/wp/wp-admin/edit.php?orderby=comment_count&amp;order=asc"><span>Status</span><span class="sorting-indicator"></span></a></th>
+                <th scope="col" id="status" class="manage-column column-comments num sortable desc" style=""><a href="<?=$orderByStatusURL?>"><span>Status</span><span class="sorting-indicator"></span></a></th>
                 <th scope="col" id="updatedate" class="manage-column column-date sortable asc" style=""><a href="http://localhost/%7Ehendra/wp/wp-admin/edit.php?orderby=date&amp;order=desc"><span>Last Update</span><span class="sorting-indicator"></span></a></th>
             </tr>
 	</tfoot>
 
 	<tbody id="the-list">
 <?
+        if (sizeof($orderData) > 0) {
+
         foreach($orderData as $order) {
 ?>
         <tr id="order-<?=$order->id?>" class="alternate author-self status-publish format-default iedit" valign="top">
@@ -91,6 +103,14 @@ class WarungAdminOrder {
             <td class="date column-date"><abbr title="<?=$order->dtlastupdated?>"><?=$order->dtlastupdated?></abbr></td>
         </tr>
 <?
+        }
+
+        } else {
+            ?>
+        <tr id="order-<?=$order->id?>" class="alternate author-self status-publish format-default iedit" valign="top">
+            <td colspan="8" style="text-align: center">Empty Order</td>
+        </tr>
+            <?
         }
 ?>
         </tbody>

@@ -16,12 +16,12 @@ class OrderService implements IOrderService {
     private $orderItemsTable;
 
     // update statuses
-    public static $STATUS_ORDERED = "ordered";
-    public static $STATUS_PAYMENT_VERIFIED = "payment_verified";
-    public static $STATUS_PAYMENT_NOT_VERIFIED= "payment_not_verified";
-    public static $STATUS_DELIVERED = "delivered";
-    public static $STATUS_RECEIVED = "received";
-    public static $STATUS_CANCELED = "canceled";
+    public static $STATUS_ORDERED = "(1)ordered";
+    public static $STATUS_PAYMENT_NOT_VERIFIED= "(2)payment_not_verified";
+    public static $STATUS_PAYMENT_VERIFIED = "(3)payment_verified";
+    public static $STATUS_DELIVERED = "(4)delivered";
+    public static $STATUS_RECEIVED = "(5)received";
+    public static $STATUS_CANCELED = "(6)canceled";
 
     public function __construct() {
         global $wpdb;
@@ -32,7 +32,7 @@ class OrderService implements IOrderService {
     }
 
     //put your code here
-    public function getAllOrders($showPerPage=10, $page=1, $orderBy='id') {
+    public function getAllOrders($showPerPage=10, $page=1, $orderBy='id DESC') {
         global $wpdb;
 
         $ret = array();
@@ -50,7 +50,7 @@ class OrderService implements IOrderService {
 
         $sql = $wpdb->prepare("SELECT id, dtcreated, status, dtlastupdated, items_price, shipping_price, dtpayment, dtdelivery, delivery_number
                   FROM $this->orderTable
-                 ORDER BY $orderBy DESC LIMIT %d,%d", $offset, $showPerPage);
+                 ORDER BY $orderBy LIMIT %d,%d", $offset, $showPerPage);
 
         $result = $wpdb->get_results($sql);
 

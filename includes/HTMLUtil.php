@@ -37,5 +37,6 @@ class HTMLUtil {
 
         return $ret;
     }
+
 }
 ?>
