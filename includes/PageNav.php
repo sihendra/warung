@@ -53,7 +53,7 @@ class PageNav {
 
             if ($this->page - $showNum <= 0) {
                 // show from 1 to showPage
-                for ($i=1;$i<=$showPages;$i++) {
+                for ($i=1;$i<=$showPages && $i <= $this->totalPage;$i++) {
                     if ($i == $this->page) {
                         $pages .= $i.$separator;
                     } else {

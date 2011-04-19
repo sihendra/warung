@@ -34,15 +34,15 @@ class WarungKasir extends Kasir {
                             $arr[$item->productId] = $item;
                         } else {
                             // new
-                            $mappedServiceItems[$sname] = array($item->productId => $item);
+                            $mappedServiceItems[$sname] = array($item->name => $item);
                         }
                     } else {
                         // other item
-                        $otherServiceItems[$item->productId] = $item;
+                        $otherServiceItems[$item->name] = $item;
                     }
                 } else {
                     // other item
-                    $otherServiceItems[$item->productId] = $item;
+                    $otherServiceItems[$item->name] = $item;
                 }
             }
         }
@@ -60,7 +60,6 @@ class WarungKasir extends Kasir {
             }
         }
 
-
         // process others item
         if (!empty($otherServiceItems)) {
             $ss = $this->getCheapestShippingService($destination, $otherServiceItems);
@@ -69,6 +68,8 @@ class WarungKasir extends Kasir {
                 $totalOngkir += $ss->getPrice($destination, $otherServiceItems);
             }
         }
+
+        
 
         $sum->totalShippingPrice = $totalOngkir;
 
