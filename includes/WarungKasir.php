@@ -9,6 +9,13 @@ class WarungKasir extends Kasir {
         $this->shippingProductMap = $shippingProductMap;
     }
 
+    /**
+     * Get Keranjang Summary with Shipping Price
+     * @param ShippingDestination $destination
+     * @param IKeranjangService $keranjangService
+     * @param IShippingService $shippingService
+     * @return KeranjangSummary the summary
+     */
     function getSummaryWithShippping($destination, $keranjangService, $shippingService) {
 
         $sum = $keranjangService->getSummary();
@@ -31,18 +38,18 @@ class WarungKasir extends Kasir {
                         if (isset($mappedServiceItems[$sname])) {
                             // update
                             $arr = &$mappedServiceItems[$sname];
-                            $arr[$item->productId] = $item;
+                            $arr[$item->cartId] = $item;
                         } else {
                             // new
-                            $mappedServiceItems[$sname] = array($item->name => $item);
+                            $mappedServiceItems[$sname] = array($item->cartId => $item);
                         }
                     } else {
                         // other item
-                        $otherServiceItems[$item->name] = $item;
+                        $otherServiceItems[$item->cartId] = $item;
                     }
                 } else {
                     // other item
-                    $otherServiceItems[$item->name] = $item;
+                    $otherServiceItems[$item->cartId] = $item;
                 }
             }
         }

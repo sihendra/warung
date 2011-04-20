@@ -30,6 +30,7 @@ interface IKeranjangService {
 
     /**
      * Return all items in the shopping cart
+     * @return KeranjangItem[] items
      */
     function getItems();
 
@@ -49,6 +50,9 @@ interface IKeranjangService {
      */
     function getTotalWeight();
 
+    /**
+     * @return KeranjangSummary 
+     */
     function getSummary();
 }
 

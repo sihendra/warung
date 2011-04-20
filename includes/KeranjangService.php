@@ -9,6 +9,7 @@ class KeranjangService implements IKeranjangService {
     protected $items;
     protected $summary;
     protected $needRecount;
+    protected static $MAX_ITEM = 9999999;
 
     /**
      * Create KeranjangService from intial items.
@@ -27,6 +28,14 @@ class KeranjangService implements IKeranjangService {
 
     function addItem($item, $count) {
         $oldItem;
+
+        // guard
+        if ($count > self::$MAX_ITEM) {
+            $count = self::$MAX_ITEM;
+        }
+        if ($count < 0) {
+            $count = 0;
+        }
 
         if (isset($this->items[strval($item->cartId)])) {
             $oldItem = $this->items[strval($item->cartId)];
@@ -61,6 +70,15 @@ class KeranjangService implements IKeranjangService {
     }
 
     function updateQuantity($cartId, $count) {
+
+        // guard
+        if ($count > self::$MAX_ITEM) {
+            $count = self::$MAX_ITEM;
+        }
+        if ($count < 0) {
+            $count = 0;
+        }
+
         $oldItem = $this->items[strval($cartId)];
         if (isset($oldItem)) {
             if ($count <= 0) {

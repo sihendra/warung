@@ -2,7 +2,8 @@
 SQLyog Community v9.0 RC
 MySQL - 5.1.54-1ubuntu4 : Database - wp
 *********************************************************************
-*/
+*/
+
 
 /*!40101 SET NAMES utf8 */;
 
@@ -32,7 +33,7 @@ CREATE TABLE `wp_wrg_order` (
   `delivery_number` varchar(100) DEFAULT NULL,
   `shipping_weight` float NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
 
 /*Table structure for table `wp_wrg_order_items` */
 
@@ -46,7 +47,7 @@ CREATE TABLE `wp_wrg_order_items` (
   `weight` float NOT NULL DEFAULT '0',
   `price` float NOT NULL DEFAULT '0',
   KEY `idx_wrg_order_items` (`order_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 /*Table structure for table `wp_wrg_order_shipping` */
 

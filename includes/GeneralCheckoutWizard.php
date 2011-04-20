@@ -153,6 +153,7 @@ class GeneralCheckoutWizard implements ICheckoutWizard {
             if ($showUpdateForm) {
     ?>
                     <form method="POST" action="<?= $this->getActionURL("updateCart") ?>">
+                         <? wp_nonce_field('warung_detailed_cart','warung_detailed_cart_nonce'); ?>
         <?
             }
         ?>
@@ -175,7 +176,7 @@ class GeneralCheckoutWizard implements ICheckoutWizard {
                     <td><?= $this->formatWeight($i->weight) ?></td>
                     <td><?= $this->formatCurrency($i->price) ?></td>
                     <td><? if ($showUpdateForm) { ?>
-                            <input type="text" name="qty_<?= $i->cartId ?>" value="<?= $i->quantity ?>" size="1"/>
+                        <input type="text" name="qty_<?= $i->cartId ?>" value="<?= $i->quantity ?>" size="1" maxlength="5"/>
 <?
                 } else {
                     echo $i->quantity;
@@ -254,11 +255,12 @@ class GeneralCheckoutWizard implements ICheckoutWizard {
                     <div id="wCart_shipping_form">
 <? if ($showUpdateForm) : ?>
                             <form method="POST" name="wCart_shipping_form" id="wCart_shipping_form2" action="<?= $this->getActionURL('confirm') ?>">
+                                <? wp_nonce_field('warung_shipping_form','warung_shipping_form_nonce'); ?>
 <? endif; ?>
                                 <div class="wCart_form_row">
                                     <label for="semail">Email *</label>
         <? if ($showUpdateForm) : ?>
-                                <input type="text" name="semail" value="<?= $userInfo->email ?>"/>
+                                    <input type="text" name="semail" value="<?= $userInfo->email ?>" maxlength="60"/>
             <? else: ?>
                                 <span><?= $userInfo->email ?></span>
 <? endif; ?>
@@ -267,7 +269,7 @@ class GeneralCheckoutWizard implements ICheckoutWizard {
                             <div class="wCart_form_row">
                                 <label for="sphone">HP (handphone) *</label>
                 <? if ($showUpdateForm) : ?>
-                                <input type="text" name="sphone" value="<?= $userInfo->phone ?>"/>
+                                <input type="text" name="sphone" value="<?= $userInfo->phone ?>" maxlength="31"/>
 <? else: ?>
                                     <span><?= $userInfo->phone ?></span>
 <? endif; ?>
@@ -275,14 +277,14 @@ class GeneralCheckoutWizard implements ICheckoutWizard {
                                 <div class="wCart_form_row">
                                     <label for="sname">Nama Penerima *</label>
 <? if ($showUpdateForm) : ?>
-                                        <input type="text" name="sname" value="<?= $userInfo->name ?>"/></div>
+                                        <input type="text" name="sname" value="<?= $userInfo->name ?>" maxlength="60"/></div>
 <? else: ?>
                                         <span><?= $userInfo->name ?></span>
 <? endif; ?>
                                         <div class="wCart_form_row">
                                             <label for="saddress">Alamat *</label>
             <? if ($showUpdateForm) : ?>
-                                                    <textarea name="saddress"><?= $userInfo->address ?></textarea>
+                                                    <textarea name="saddress" ><?= $userInfo->address ?></textarea>
             <? else: ?>
                                                         <span><?= $userInfo->address ?></span>
 <? endif; ?>

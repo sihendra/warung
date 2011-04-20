@@ -1,9 +1,4 @@
 <?php
-/* 
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 /**
  * Description of Warung
  *
@@ -16,7 +11,7 @@ class Warung {
 
 
     function __construct() {
-        $this->pluginUrl = trailingslashit(WP_PLUGIN_URL . '/' . dirname(plugin_basename(__FILE__)));
+        $this->pluginUrl = trailingslashit(WP_PLUGIN_URL . '/warung');
     }
 
     function init() {
@@ -31,12 +26,12 @@ class Warung {
     function init_scripts() {
         wp_enqueue_script('jquery');
         wp_enqueue_script('jquery-form'); //, $this->pluginUrl.'scripts/jquery.form.js',array('jquery'));
-        wp_enqueue_script('jquery_validaton', $this->pluginUrl . 'scripts/jquery.validate.js', array('jquery'));
-        wp_enqueue_script('warung_js', $this->pluginUrl . 'scripts/warung.js', array('jquery'));
+        wp_enqueue_script('jquery_validaton', $this->pluginUrl . '/scripts/jquery.validate.js', array('jquery'));
+        wp_enqueue_script('warung_js', $this->pluginUrl . '/scripts/warung.js', array('jquery'));
     }
 
     function init_styles() {
-        wp_enqueue_style('warung_style', $this->pluginUrl . 'style/warung.css');
+        wp_enqueue_style('warung_style', $this->pluginUrl . '/style/warung.css');
     }
 
     function process_params() {
@@ -48,7 +43,7 @@ class Warung {
 
         if (isset($_REQUEST['action'])) {
             $a = $_REQUEST['action'];
-            if ($a == 'updateCart') {
+            if ($a == 'updateCart' && wp_verify_nonce($_REQUEST['warung_detailed_cart_nonce'],'warung_detailed_cart')) {
                 foreach ($_REQUEST as $key => $val) {
                     if (strpos($key, 'qty_') !== false) {
                         //echo $key.'->'.$val;
@@ -62,7 +57,7 @@ class Warung {
                 $keranjang->emptyCart();
             } else if ($a == 'removeCartItem' && isset($_REQUEST['ci'])) {
                 $keranjang->updateQuantity($_REQUEST['ci'], 0);
-            } else if ($a == 'confirm') {
+            } else if ($a == 'confirm' && wp_verify_nonce($_REQUEST['warung_shipping_form_nonce'],'warung_shipping_form')) {
                 // update shipping
                 $kasir = $warungOpt->getKasirService();
                 extract($_REQUEST);

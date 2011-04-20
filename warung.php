@@ -25,14 +25,12 @@ function warung_class_loader($n) {
     if (file_exists($theClass) && include_once($theClass)) {
         return TRUE;
     } else {
-        trigger_error("The class '$class' or the file '$theClass' failed to spl_autoload  ", E_USER_WARNING);
+        //trigger_error("The class '$class' or the file '$theClass' failed to spl_autoload  ", E_USER_WARNING);
         return FALSE;
     }
 }
 
 spl_autoload_register('warung_class_loader');
-
-require_once 'warung_class.php';
 
 
 // instantiate required class
@@ -44,19 +42,19 @@ if (isset($warung)) {
     // call init methods
     register_activation_hook(__FILE__, array(&$warung,'install'));
 
-        // sessions and params processing
-        add_action('init', array(&$warung,'init'));
+    // sessions and params processing
+    add_action('init', array(&$warung,'init'));
 
-        // admin menu/page
-        add_action('admin_menu', array(&$warungAdmin, 'admin_menu'));
+    // admin menu/page
+    add_action('admin_menu', array(&$warungAdmin, 'admin_menu'));
 
-        // widget
-        add_action('widgets_init', create_function('', 'return register_widget("WarungCartWidget");'));
-        add_action('widgets_init', create_function('', 'return register_widget("WarungFeaturedContentWidget");'));
+    // widget
+    add_action('widgets_init', create_function('', 'return register_widget("WarungCartWidget");'));
+    add_action('widgets_init', create_function('', 'return register_widget("WarungFeaturedContentWidget");'));
 
-        // css and JS
-        add_action('wp_print_scripts', array(&$warung, 'init_scripts'));
-        add_action('wp_print_styles', array(&$warung, 'init_styles'));
+    // css and JS
+    add_action('wp_print_scripts', array(&$warung, 'init_scripts'));
+    add_action('wp_print_styles', array(&$warung, 'init_styles'));
 } else {
     exit("Fail initialize warung class");
 }

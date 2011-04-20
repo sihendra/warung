@@ -12,7 +12,7 @@
 class Order {
     public $id;
     public $dtcreated;
-    public $status='order';
+    public $status;
     public $dtlastupdated;
 
     public $itemsPrice;
@@ -35,6 +35,10 @@ class Order {
     public $shippingInfo;
     public $items;
 
+
+    public function __construct() {
+        $this->status = OrderService::$STATUS_ORDERED;
+    }
 
     public function getBuyerName() {
         if (isset($this->shippingInfo)) {
