@@ -9,7 +9,7 @@
  *
  * @author hendra
  */
-class WarungCartWidget {
+class WarungCartWidget extends WP_Widget {
 
     private $warung;
 

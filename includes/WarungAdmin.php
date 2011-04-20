@@ -9,7 +9,7 @@ class WarungAdmin {
     }
 
     function admin_menu() {
-        add_menu_page('Warung Options', 'Warung', 'administrator', __FILE__, array(&$this, 'handle_options'), plugins_url('/images/icon.png', __FILE__));
+        add_menu_page('Warung Options', 'Warung', 'administrator', __FILE__, array(&$this, 'handle_options'), $this->warung->pluginUrl.'/images/icon.png');
         // add sub menu
         add_submenu_page(__FILE__, 'Warung General Options', 'General', 'administrator', __FILE__, array(&$this, 'handle_options'));
         add_submenu_page(__FILE__, 'Warung Shipping', 'Shipping', 'administrator', __FILE__ . '_shipping', array(&$this, 'handle_shipping'));

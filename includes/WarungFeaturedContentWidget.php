@@ -9,7 +9,7 @@
  *
  * @author hendra
  */
-class WarungFeaturedContentWidget {
+class WarungFeaturedContentWidget extends WP_Widget {
 
     private $warung;
 
