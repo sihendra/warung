@@ -3,9 +3,11 @@
 class WarungAdmin {
 
     protected $warung;
+    protected $warungOptions;
 
     function __construct($warung) {
         $this->warung = $warung;
+        $this->warungOptions = new WarungOptions();
     }
 
     function admin_menu() {
@@ -34,9 +36,7 @@ class WarungAdmin {
 
         ob_start();
 
-        $wo = new WarungOptions();
-
-        $options = $wo->getOptions();
+        $options = $this->warungOptions->getOptions();
 
         if (isset($_POST['general_submit'])) {
             //check security
@@ -128,7 +128,7 @@ class WarungAdmin {
     function handle_product_opt() {
         ob_start();
 
-        $options = $this->warung->get_options();
+        $options = $this->warungOptions->getOptions();
 
         if (isset($_POST['product_opt_submit'])) {
             //check security
@@ -224,7 +224,7 @@ class WarungAdmin {
                 function handle_byweight_shipping() {
                     ob_start();
 
-                    $options = $this->warung->get_options();
+                    $options = $this->warungOptions->getOptions();
 
                     if (isset($_POST['shipping_byweight_submit'])) {
                         //check security
@@ -381,7 +381,7 @@ class WarungAdmin {
                     </div>
 <?
                     // get from option
-                    $prod_options = $this->warung->get_options();
+                    $prod_options = $this->warungOptions->getOptions();
                     $prod_options = $prod_options["prod_options"];
                     // get from product custom field
 
