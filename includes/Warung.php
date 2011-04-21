@@ -146,21 +146,22 @@ class Warung {
     function filter_content($content) {
         global $post;
 
-        $co_page = $this->get_checkout_page();
-        $shipping_sim_page = $this->get_shipping_simulation_page();
-        $home_url = get_option("home");
+        $wo = new WarungOptions();
+
+        $co_page = $wo->getCheckoutPageId();
+        $shipping_sim_page = $wo->getShippingSimPageId();
+        $home_url = $wo->getHomeURL();
 
         ob_start();
 
         if ($post->ID == $co_page) {
-            $warungOpt = new WarungOptions();
-            $wiz = $warungOpt->getCheckoutWizard();
+            $wiz = $wo->getCheckoutWizard();
             $content = $wiz->showPage();
         } else if ($post->ID == $shipping_sim_page) {
-            $s = $this->get_shipping_options();
+            $s = $wo->getShippingServices();
             if (!empty($s)) {
-                $cities = array();
-                $cities = $s->getCities();
+                $kasir = new WarungKasir($s, null);
+                $cities = $kasir->getCitiesByCountry('indonesia');
                 $city = $_REQUEST["wc_sim_city"];
                 $wc_weight = $_REQUEST["wc_sim_weight"];
                 if (empty($wc_weight)) {
@@ -171,14 +172,15 @@ class Warung {
                 if (isset($_REQUEST["wc_sim_city"])) {
                     $s_cid = $_REQUEST["wc_sim_city"];
                     $s_weight = $_REQUEST["wc_sim_weight"];
-                    $s_cheap = $s->getCheapestServices($s_cid, $s_weight);
+                    $dest = new ShippingDestination('indonesia', null, $s_cid, 0);
+                    $s_cheap = $kasir->getCheapestShippingServiceByWeight($dest, $s_weight);
                     if (!empty($s_cheap)) {
-                        array_push($resp, '<strong>' . $s_cheap->name . ': ' . $this->formatCurrency(Utils::ceilToHundred($s_cheap->price) * $s_weight) . ' (' . $this->formatCurrency(Utils::ceilToHundred($s_cheap->price)) . '/Kg) (paling murah)</strong>');
+                        array_push($resp, '<strong>' . $s_cheap->getName() . ': ' . Utils::formatCurrency(Utils::ceilToHundred($s_cheap->price) * $s_weight) . ' (' . Utils::formatCurrency(Utils::ceilToHundred($s_cheap->price)) . '/Kg) (paling murah)</strong>');
                     }
-                    $s_serv = $s->getServiceByCityAndWeight($s_cid, $s_weight);
+                    $s_serv = $kasir->getShippingServicesByDestination($dest);
                     foreach ($s_serv as $sss) {
                         if ($sss != $s_cheap) {
-                            array_push($resp, $sss->name . ': ' . $this->formatCurrency(Utils::ceilToHundred($sss->price) * $s_weight) . ' (' . $this->formatCurrency(Utils::ceilToHundred($sss->price)) . '/Kg)');
+                            array_push($resp, $sss->getName() . ': ' . Utils::formatCurrency(Utils::ceilToHundred($sss->price) * $s_weight) . ' (' . Utils::formatCurrency(Utils::ceilToHundred($sss->price)) . '/Kg)');
                         }
                     }
                 }
@@ -261,7 +263,7 @@ class Warung {
                             }
 ?><p>
                                 <input type="radio" name="product_option" value="<?= $po->id ?>" <?= $checked ?>/>
-        <?= $po->name . '@' . $this->formatCurrency($po->price) ?>
+        <?= $po->name . '@' . Utils::formatCurrency($po->price) ?>
                             </p><?
                         }
                     } else {
@@ -275,7 +277,7 @@ class Warung {
                                 $selected = 'selected="selected"';
                             }
 ?>
-                            <option value="<?= $po->id ?>" <?= $selected ?>><?= $po->name . '@' . $this->formatCurrency($po->price) ?></option>
+                            <option value="<?= $po->id ?>" <?= $selected ?>><?= $po->name . '@' . Utils::formatCurrency($po->price) ?></option>
             <?
                         }
             ?>
@@ -285,16 +287,16 @@ class Warung {
                 } else {
                     if (isset($disc_price) && !empty($disc_price)) {
             ?>
-                        <h2><s><?= $this->formatCurrency($disc_price) ?></s></h2>
-                        <h2><?= $this->formatCurrency($product["price"]) ?></h2>
+                        <h2><s><?= Utils::formatCurrency($disc_price) ?></s></h2>
+                        <h2><?= Utils::formatCurrency($product["price"]) ?></h2>
 <?
                     } else {
 ?>
-                        <h2><?= $this->formatCurrency($product["price"]) ?></h2>
+                        <h2><?= Utils::formatCurrency($product["price"]) ?></h2>
         <?
                     }
                 }
-                $options = $this->get_options();
+                $options = $wo->getOptions();
         ?>
         <!--<input type="submit" name="add_to_cart" value="<?= $options["add_to_cart"] ?>"/>-->
                 <input type="submit" name="wcart_ordernow" value="Pesan Sekarang!"/>
@@ -311,70 +313,7 @@ class Warung {
         return $content;
     }
 
-    function send_order($bccAdmin=false) {
-
-        if (!empty($_SESSION['wCart']) && isset($_COOKIE['wCartShipping'])) {
-            $so = $this->get_shipping_options();
-            $sh = $so->getSavedShippingInfo();
-            $email_pemesan = $sh['email'];
-
-            $admin_email = get_option("admin_email");
-            $order_id = date('ymdH') . mt_rand(10, 9999);
-            $subject = "[Warungsprei.com] Pemesanan #" . $order_id;
-            $admin_message = $this->get_order_summary(true, true, array("order_id" => $order_id));
-            $customer_message = $this->get_order_summary(false, true, array("order_id" => $order_id));
-            //echo get_order_summary();
-            $headers = "Content-type: text/html;\r\n";
-            $headers .= "From: Warungsprei.com <info@warungsprei.com>\r\n";
-
-            // send email to admin
-            $ret = mail($admin_email, "[Admin] " . $subject, $admin_message, $headers);
-            // send to pemesan bcc admin
-            if ($bccAdmin) {
-                $headers .= "Bcc: " . $admin_email . "\r\n";
-            }
-            mail($email_pemesan, $subject, $customer_message, $headers);
-
-            $home_url = get_option("home");
-
-            if ($ret) {
-?>
-                <div class="wcart_info">
-                    <p>Informasi pemesanan juga sudah kami kirim ke <b>'<?= $email_pemesan ?>'.</b> Mohon periksa juga folder <b>'Junk'</b> jika tidak ada di inbox.</p>
-                </div>
-                <div class="wcart_general_container">
-<?
-                echo $customer_message;
-?>
-                </div>
-                <div><br/><a href="<?= $home_url ?>" class="wcart_button_url">Kembali berbelanja &gt;&gt;</a></div>
-    <?
-                $this->warung_empty_cart();
-            } else {
-    ?>
-            <div class="wcart_general_container">
-                            	                Maaf kami belum dapat memproses pesanan anda. Silahkan coba beberapa saat lagi.<br/>
-                            	                Untuk pemesanan dapat langsung dikirim via SMS ke: 08888142879 atau 081808815325.<br/>
-                            	                Klik <a href="<?= $this->get_checkout_url() ?>" class="wcart_button_url">di sini</a> untuk melihat daftar pesanan anda.
-                </div>
-    <?
-            }
-
-
-            return $ret;
-        }
-
-        return false;
-    }
-
-    function parse_image_url($post) {
-
-    }
-
     function install() {
-        // set default options
-        $this->get_options();
-
         $installed_ver = get_option( "warung_db_version" );
 
         // DB
@@ -460,96 +399,12 @@ class Warung {
 
     }
 
-    function formatCurrency($price) {
-
-        $options = $this->get_options();
-
-        $wo = new WarungOptions();
-        $currency = $wo->getCurrency();
-
-        return trim($currency) . number_format($price, 0, ',', '.');
-    }
-
-    function formatWeight($weight) {
-        $options = $this->get_options();
-
-        $wo = new WarungOptions();
-        $weight_sign = $wo->getWeightSign();
-
-        return number_format($weight, 1, ',', '.') . ' ' . trim($weight_sign);
-    }
-
     // -------------------------- OPTIONS ------------------------------
 
-    function get_weight_sign() {
-        $options = $this->get_options();
-        return $options['weight_sign'];
-    }
-
-    function get_checkout_page() {
-        $options = $this->get_options();
-        return $options['checkout_page'];
-    }
-
-    function get_checkout_url() {
-        return get_permalink($this->get_checkout_page());
-    }
-
-    function get_shipping_url() {
-        return Utils::addParameter($this->get_checkout_url(), array("step" => 2));
-    }
-
-    function get_order_url() {
-        return Utils::addParameter($this->get_checkout_url(), array("step" => 3));
-    }
-
-    function get_shipping_simulation_page() {
-        $options = $this->get_options();
-        return $options['shipping_sim_page'];
-    }
-
-    function get_options() {
-
-        // default
-        $def_page;
-        foreach (get_pages () as $page) {
-            $def_page = $page->ID;
-            break;
-        }
-        $options = array(
-            'currency' => 'Rp. ',
-            'add_to_cart' => 'Add to Cart',
-            'checkout_page' => $def_page,
-            'shipping_sim_page' => '',
-            'prod_options' => array(),
-            'shipping_options' => '',
-            'weight_sign' => 'Kg',
-            'shipping_cities' => ''
-        );
-
-
-        // get from db
-        $saved = get_option(Warung::$db_option);
-
-        //print_r($saved);
-        // assign them
-        if (!empty($saved)) {
-            foreach ($saved as $key => $option) {
-                $options[$key] = $option;
-            }
-        }
-
-        //print_r($options);
-        // update if necessary
-        if ($saved != $options) {
-            update_option(Warung::$db_option, $options);
-        }
-
-        return $options;
-    }
 
     function get_shipping_options() {
-        $options = $this->get_options();
+        $wo = new WarungOptions();
+        $options = $wo->getOptions();
         $shipping_options = $options["shipping_byweight"];
         $cities = $options["shipping_cities"];
         $ret = null;
@@ -620,7 +475,9 @@ class Warung {
             }
 
             if (!empty($product_options_name)) {
-                $opts = $this->get_options();
+                $wo = new WarungOptions();
+
+                $opts = $wo->getOptions();
                 $prod_opts = $opts['prod_options'];
 
                 if (!empty($prod_opts) && is_array($prod_opts)) {

@@ -149,5 +149,28 @@ class Utils {
         }
         return $n;
     }
+
+    /**
+     * Add currency sign and add period every thousand
+     * @param number $price
+     * @return string
+     */
+    public static function formatCurrency($price) {
+        $wo = new WarungOptions();
+        $currency = $wo->getCurrency();
+
+        return trim($currency) . number_format($price, 0, ',', '.');
+    }
+
+    /**
+     * Add weight sign and add period on thousand
+     * @param number $weight
+     * @return string
+     */
+    public static function formatWeight($weight) {
+        $wo = new WarungOptions();
+        $weight_sign =  $wo->getWeightSign();
+        return number_format($weight, 1, ',', '.') . ' ' . trim($weight_sign);
+    }
 }
 ?>
