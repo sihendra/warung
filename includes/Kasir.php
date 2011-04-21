@@ -111,6 +111,11 @@ class Kasir implements IKasirService {
         }
     }
 
+    function getCheapestShippingServiceByWeight($destination, $weight) {
+        $item = new KeranjangItem(0, 0, 'sprei', 0, $weight, 1, null, 0);
+        return $this->getCheapestShippingService($destination, array($item));
+    }
+
     function getShippingServiceByName($sname) {
         if (isset($sname)) {
             foreach ($this->shippingServices as $ss) {

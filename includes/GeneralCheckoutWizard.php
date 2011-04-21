@@ -173,8 +173,8 @@ class GeneralCheckoutWizard implements ICheckoutWizard {
                             <div id="wcart_pinfo"><?= $i->name ?></div>
                         </div>
                     </td>
-                    <td><?= $this->formatWeight($i->weight) ?></td>
-                    <td><?= $this->formatCurrency($i->price) ?></td>
+                    <td><?= Utils::formatWeight($i->weight) ?></td>
+                    <td><?= Utils::formatCurrency($i->price) ?></td>
                     <td><? if ($showUpdateForm) { ?>
                         <input type="text" name="qty_<?= $i->cartId ?>" value="<?= $i->quantity ?>" size="1" maxlength="5"/>
 <?
@@ -182,7 +182,7 @@ class GeneralCheckoutWizard implements ICheckoutWizard {
                     echo $i->quantity;
                 } ?>
                     </td>
-                    <td><?= $this->formatCurrency($i->price * $i->quantity) ?> </td>
+                    <td><?= Utils::formatCurrency($i->price * $i->quantity) ?> </td>
                         <? if ($showUpdateForm) { ?>
                         <td><a class="wcart_remove_item" href="<?= $removePage ?>"><div><span>(X)</span></div></a></td>
 <? } ?>
@@ -195,12 +195,12 @@ class GeneralCheckoutWizard implements ICheckoutWizard {
 ?>
                         <tr><td colspan="3" class="wcart-td-footer">&nbsp</td><td class="wcart-td-footer"><input type="submit" name="wc_update" value="Update" title="Klik tombol ini jika ingin mengupdate jumlah barang"/></td><td class="wcart-td-footer">&nbsp;</td></tr>
                 <? } ?>
-                    <tr><td colspan="4" class="wcart-td-footer">Total Sebelum Ongkos Kirim</td><td class="wcart-td-footer"><span class="wcart_total"><?= $this->formatCurrency($cartSum->totalPrice) ?></span></td></tr>
+                    <tr><td colspan="4" class="wcart-td-footer">Total Sebelum Ongkos Kirim</td><td class="wcart-td-footer"><span class="wcart_total"><?= Utils::formatCurrency($cartSum->totalPrice) ?></span></td></tr>
                 <?
                     if (isset($cartSum->totalShippingPrice)) {
                 ?>
-                        <tr><td colspan="4" class="wcart-td-footer">Ongkos Kirim (<?= $this->formatWeight($cartSum->totalWeight) ?>) - <?= $cartSum->shippingName ?></td><td class="wcart-td-footer"><span class="wcart_total"><?= $this->formatCurrency($cartSum->totalShippingPrice) ?></span></td></tr>
-                        <tr><td colspan="4" class="wcart-td-footer">Total Setelah Ongkos Kirim</td><td class="wcart-td-footer"><span class="wcart_total"><?= $this->formatCurrency($cartSum->totalPrice + $cartSum->totalShippingPrice) ?></span></td></tr>
+                        <tr><td colspan="4" class="wcart-td-footer">Ongkos Kirim (<?= Utils::formatWeight($cartSum->totalWeight) ?>) - <?= $cartSum->shippingName ?></td><td class="wcart-td-footer"><span class="wcart_total"><?= Utils::formatCurrency($cartSum->totalShippingPrice) ?></span></td></tr>
+                        <tr><td colspan="4" class="wcart-td-footer">Total Setelah Ongkos Kirim</td><td class="wcart-td-footer"><span class="wcart_total"><?= Utils::formatCurrency($cartSum->totalPrice + $cartSum->totalShippingPrice) ?></span></td></tr>
                 <? } ?>
                 </table>
 <? if ($showUpdateForm) { ?>
@@ -390,7 +390,7 @@ class GeneralCheckoutWizard implements ICheckoutWizard {
                                                                         }
 ?>
                                                                         <div>
-                                                                            <p><?= $userInfo->name ?>, kami sudah menerima pesanan anda. Untuk pembayaran silahkan transfer ke salah satu nomor rekening berikut sebesar <b><?= $this->formatCurrency($cartSum->totalPrice + $cartSum->totalShippingPrice) ?></b>:
+                                                                            <p><?= $userInfo->name ?>, kami sudah menerima pesanan anda. Untuk pembayaran silahkan transfer ke salah satu nomor rekening berikut sebesar <b><?= Utils::formatCurrency($cartSum->totalPrice + $cartSum->totalShippingPrice) ?></b>:
                                                                             <ul>
                                                                                 <li>BCA: 5800106950 a.n. Hendra Setiawan</li>
                                                                                 <li>Mandiri: 1270005578586 a.n. Hendra Setiawan</li>
@@ -450,25 +450,7 @@ class GeneralCheckoutWizard implements ICheckoutWizard {
                                                                         return $u;
                                                                     }
 
-                                                                    /**
-                                                                     * Add currency sign and add period every thousand
-                                                                     * @param number $price
-                                                                     * @return string
-                                                                     */
-                                                                    protected function formatCurrency($price) {
-                                                                        $currency = $this->warungOption->getCurrency();
-                                                                        return trim($currency) . number_format($price, 0, ',', '.');
-                                                                    }
-
-                                                                    /**
-                                                                     * Add weight sign and add period on thousand
-                                                                     * @param number $weight
-                                                                     * @return string
-                                                                     */
-                                                                    protected function formatWeight($weight) {
-                                                                        $weight_sign = $this->warungOption->getWeightSign();
-                                                                        return number_format($weight, 1, ',', '.') . ' ' . trim($weight_sign);
-                                                                    }
+                                                                    
 
                                                                     function form_selected($selname, $value) {
                                                                         if ($selname == $value) {

@@ -24,31 +24,49 @@ class WarungOptions {
     }
 
     public function getCurrency() {
-        return $this->options['currency'];
+        if (!empty($this->options)) {
+            return $this->options['currency'];
+        }
     }
 
     public function getWeightSign() {
-        return $this->options['weight_sign'];
+        if (!empty($this->options)) {
+            return $this->options['weight_sign'];
+        }
     }
 
     public function getAddToCartText() {
-        return $this->options['add_to_cart'];
+        if (!empty($this->options)) {
+            return $this->options['add_to_cart'];
+        }
     }
 
     public function getCheckoutPageId() {
-        return $this->options['checkout_page'];
+        if (!empty($this->options)) {
+            return $this->options['checkout_page'];
+        }
     }
 
     public function getCheckoutURL() {
-        return get_permalink($this->getCheckoutPageId());
+        if (!empty($this->options)) {
+            return get_permalink($this->getCheckoutPageId());
+        }
     }
 
     public function getShippingSimPageId() {
-        return $this->options['shipping_sim_page'];
+        if (!empty($this->options)) {
+            return $this->options['shipping_sim_page'];
+        }
     }
 
     public function getShippingSimURL() {
-        return get_permalink($this->getShippingSimPageId());
+        if (!empty($this->options)) {
+            return get_permalink($this->getShippingSimPageId());
+        }
+    }
+
+    public function getHomeURL() {
+        return get_option("home");
     }
 
     /**
@@ -56,7 +74,9 @@ class WarungOptions {
      * @return Array of product options. format array { "name" => object{name, value, txt} }
      */
     public function getGlobalProductOptions() {
-        return $this->options['prod_options'];
+        if (!empty($this->options)) {
+            return $this->options['prod_options'];
+        }
     }
 
     /**
@@ -100,6 +120,10 @@ class WarungOptions {
      * @return Array of IShippingService
      */
     public function getShippingServices() {
+        if (empty($this->options)) {
+            return array();
+        }
+
         if (isset($this->shippingServices)) {
             return $this->shippingServices;
         } else {
