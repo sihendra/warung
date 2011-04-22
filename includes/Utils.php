@@ -172,5 +172,77 @@ class Utils {
         $weight_sign =  $wo->getWeightSign();
         return number_format($weight, 1, ',', '.') . ' ' . trim($weight_sign);
     }
+
+    /**
+     * Format parameter to KeranjangItem instance
+     * @param Array $product
+     * @param int $optId
+     * @return KeranjangItem
+     */
+    public static function formatToKeranjangItem($product, $optId = -1) {
+        $ret = null;
+        if (!empty($product)) {
+            if (isset($optId) && $optId != -1) {
+                $opt = self::getSelectedOption($product, $optId);
+                if (!empty($opt)) {
+
+                    $iCartId = $product["id"] . '-' . $opt->id;
+                    $iProductId = $product["id"];
+                    $iName = $product["name"] . ' - ' . $opt->name;
+                    $iPrice = $opt->price;
+                    $iWeight = $opt->weight;
+                    $iQuantity = 1;
+                    $iWeightDiscount = 0;
+                    if (isset($opt->weight_discount)) {
+                        $iWeightDiscount = $opt->weight_discount;
+                    }
+
+                    $iAttachment = array("product" => $product, "opt_name" => $opt->name, "opt_id" => $opt->id);
+
+                    $ret = new KeranjangItem($iCartId, $iProductId, $iName, $iPrice, $iWeight, $iQuantity);
+                    $ret->weightDiscount = $iWeightDiscount;
+                    $ret->attachment = $iAttachment;
+                }
+            } else {
+
+
+                $iCartId = $product["id"];
+                $iProductId = $product["id"];
+                $iName = $product["name"];
+                $iPrice = $product["price"];
+                $iWeight = $product["weight"];
+                $iQuantity = 1;
+                $iWeightDiscount = 0;
+                if (isset($opt->weight_discount)) {
+                    $iWeightDiscount = $opt->weight_discount;
+                }
+
+                $iAttachment = array("product" => $product);
+                if (isset($product["price_discount"])) {
+                    $iAttachment["price_discount"] = $product["price_discount"];
+                }
+
+                $ret = new KeranjangItem($iCartId, $iProductId, $iName, $iPrice, $iWeight, $iQuantity);
+                $ret->weightDiscount = $iWeightDiscount;
+                $ret->attachment = $iAttachment;
+            }
+        }
+        return $ret;
+    }
+
+    protected static function getSelectedOption($product, $id) {
+        $ret;
+
+        if (!empty($product["option_value"])) {
+            foreach ($product["option_value"] as $po) {
+                if ($id == $po->id) {
+                    $ret = $po;
+                    break;
+                }
+            }
+        }
+
+        return $ret;
+    }
 }
 ?>

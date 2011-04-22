@@ -337,7 +337,7 @@ class WarungAdmin {
 
 
                     // get prev meta
-                    $product = $this->warung->getProductById($post->ID, false /* dont calculate discount */);
+                    $product = WarungProduct::getProductById($post->ID, false /* dont calculate discount */);
 
                     //default values
                     if (empty($product['stock'])) {
