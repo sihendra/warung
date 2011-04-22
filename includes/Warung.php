@@ -161,7 +161,16 @@ class Warung {
             $s = $wo->getShippingServices();
             if (!empty($s)) {
                 $kasir = new WarungKasir($s, null);
-                $cities = $kasir->getCitiesByCountry('indonesia');
+                $countries = $kasir->getCountries();
+                $country = '';
+                if (sizeof($countries >= 1)) {
+                    foreach($countries as $k=>$v) {
+                        $country = $v;
+                        break;
+                    }
+                }
+
+                $cities = $kasir->getCitiesByCountry($country);
                 $city = $_REQUEST["wc_sim_city"];
                 $wc_weight = $_REQUEST["wc_sim_weight"];
                 if (empty($wc_weight)) {
@@ -169,18 +178,24 @@ class Warung {
                 }
 
                 $resp = array();
-                if (isset($_REQUEST["wc_sim_city"])) {
+                if (isset($city)) {
                     $s_cid = $_REQUEST["wc_sim_city"];
                     $s_weight = $_REQUEST["wc_sim_weight"];
-                    $dest = new ShippingDestination('indonesia', null, $s_cid, 0);
+                    $dest = new ShippingDestination($country, null, $s_cid, 0);
                     $s_cheap = $kasir->getCheapestShippingServiceByWeight($dest, $s_weight);
                     if (!empty($s_cheap)) {
-                        array_push($resp, '<strong>' . $s_cheap->getName() . ': ' . Utils::formatCurrency(Utils::ceilToHundred($s_cheap->price) * $s_weight) . ' (' . Utils::formatCurrency(Utils::ceilToHundred($s_cheap->price)) . '/Kg) (paling murah)</strong>');
+                        $s_price = $s_cheap->getPrice($dest, array(new KeranjangItem(0, 0, '', 0, $s_weight, 1, null, 0)));
+                        $s_dest = $s_cheap->getDestination($dest);
+                        array_push($resp, '<strong>' . $s_cheap->getName() . ': ' . Utils::formatCurrency(Utils::ceilToHundred($s_price)) . ' (' . Utils::formatCurrency(Utils::ceilToHundred($s_dest->price)) . '/Kg) (paling murah)</strong>');
                     }
                     $s_serv = $kasir->getShippingServicesByDestination($dest);
                     foreach ($s_serv as $sss) {
                         if ($sss != $s_cheap) {
-                            array_push($resp, $sss->getName() . ': ' . Utils::formatCurrency(Utils::ceilToHundred($sss->price) * $s_weight) . ' (' . Utils::formatCurrency(Utils::ceilToHundred($sss->price)) . '/Kg)');
+                            $s_price = $sss->getPrice($dest, array(new KeranjangItem(0, 0, '', 0, $s_weight, 1, null, 0)));
+                            $s_dest = $sss->getDestination($dest);
+                            if ($s_price > 0) {
+                                array_push($resp, $sss->getName() . ': ' . Utils::formatCurrency(Utils::ceilToHundred($s_price)) . ' (' . Utils::formatCurrency(Utils::ceilToHundred($s_dest->price)) . '/Kg)');
+                            }
                         }
                     }
                 }
@@ -202,7 +217,7 @@ class Warung {
                     <table>
                         <tr>
                             <td><label for="wc_sim_city">Kota Tujuan</label></td>
-                            <td><?= $this->form_select('wc_sim_city', $cities, $city, 'city_callback', true) ?></td>
+                            <td><?= HTMLUtil::select('wc_sim_city', 'wc_sim_city', $cities, $city) ?></td>
                             </tr>
                             <tr>
                                 <td><label for="wc_sim_weight">Berat (Kg)</label></td>
