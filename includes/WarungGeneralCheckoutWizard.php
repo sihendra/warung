@@ -1,6 +1,6 @@
 <?php
 
-class GeneralCheckoutWizard implements ICheckoutWizard {
+class WarungGeneralCheckoutWizard implements IWarungCheckoutWizard {
 
     private $parameters;
     private $prevContent;

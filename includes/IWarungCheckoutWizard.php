@@ -1,6 +1,6 @@
 <?php
 
-interface ICheckoutWizard {
+interface IWarungCheckoutWizard {
     function showPage();
 }
 

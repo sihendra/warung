@@ -111,7 +111,7 @@ class WarungOptions {
         if (isset($this->checkoutWizard)) {
             return $this->checkoutWizard;
         } else {
-            return $this->checkoutWizard = new GeneralCheckoutWizard();
+            return $this->checkoutWizard = new WarungGeneralCheckoutWizard();
         }
     }
 
