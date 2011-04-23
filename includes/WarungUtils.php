@@ -244,5 +244,24 @@ class WarungUtils {
 
         return $ret;
     }
+    
+    public static function htmlSelect($id, $name, $data, $default=null, $class=null) {
+        $ret = '<select id="'.$id.'" name="'.$name.'"';
+        if ($class) {
+            $ret .= ' class="'.$class.'"';
+        }
+        $ret .= ">";
+        foreach($data as $key=>$val) {
+            if ($default != null && $key == $default) {
+                $ret .= '<option value="'.$key.'" selected="selected">'.$val.'</option>';
+            } else {
+                $ret .= '<option value="'.$key.'">'.$val.'</option>';
+            }
+        }
+        $ret .= "</select>";
+
+        return $ret;
+    }
+
 }
 ?>

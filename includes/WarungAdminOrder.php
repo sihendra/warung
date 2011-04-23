@@ -141,7 +141,7 @@ class WarungAdminOrder {
                 <form id="wrg_order_status_form_<?=$order->id?>" name="wrg_order_status_form_<?=$order->id?>" method="POST">
                     <?wp_nonce_field('wrg_order_status_nonce')?>
                     <input type="hidden" name="wrg_order_status_id" value="<?=$order->id?>"/>
-                    <?=HTMLUtil::select("wrg_order_status_status_".$order->id, "wrg_order_status_status", $orderStatuses, $order->status)?>
+                    <?=WarungUtils::htmlSelect("wrg_order_status_status_".$order->id, "wrg_order_status_status", $orderStatuses, $order->status)?>
                     <input type="submit"value="Update" name="wrg_order_status_submit"/>
                 </form>
             </td>

@@ -74,7 +74,7 @@ class WarungDisplay {
                 <table>
                     <tr>
                         <td><label for="wc_sim_city">Kota Tujuan</label></td>
-                        <td><?= HTMLUtil::select('wc_sim_city', 'wc_sim_city', $cities, $city) ?></td>
+                        <td><?= WarungUtils::htmlSelect('wc_sim_city', 'wc_sim_city', $cities, $city) ?></td>
                         </tr>
                         <tr>
                             <td><label for="wc_sim_weight">Berat (Kg)</label></td>
