@@ -9,7 +9,7 @@
  *
  * @author hendra
  */
-class Utils {
+class WarungUtils {
     /**
      * Parse multiline json string into json object array
      * @param String $s_content json string
@@ -135,11 +135,11 @@ class Utils {
     }
 
     public static function ceilToThousand($n) {
-        return Utils::ceilTo($n, 1000);
+        return WarungUtils::ceilTo($n, 1000);
     }
 
     public static function ceilToHundred($n) {
-        return Utils::ceilTo($n, 100);
+        return WarungUtils::ceilTo($n, 100);
     }
 
     public static function ceilTo($n, $rf) {

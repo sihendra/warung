@@ -43,7 +43,7 @@ class WarungDisplay {
                 if (!empty($s_cheap)) {
                     $s_price = $s_cheap->getPrice($dest, array(new KeranjangItem(0, 0, '', 0, $s_weight, 1, null, 0)));
                     $s_dest = $s_cheap->getDestination($dest);
-                    array_push($resp, '<strong>' . $s_cheap->getName() . ': ' . Utils::formatCurrency(Utils::ceilToHundred($s_price)) . ' (' . Utils::formatCurrency(Utils::ceilToHundred($s_dest->price)) . '/Kg) (paling murah)</strong>');
+                    array_push($resp, '<strong>' . $s_cheap->getName() . ': ' . WarungUtils::formatCurrency(WarungUtils::ceilToHundred($s_price)) . ' (' . WarungUtils::formatCurrency(WarungUtils::ceilToHundred($s_dest->price)) . '/Kg) (paling murah)</strong>');
                 }
                 $s_serv = $kasir->getShippingServicesByDestination($dest);
                 foreach ($s_serv as $sss) {
@@ -51,7 +51,7 @@ class WarungDisplay {
                         $s_price = $sss->getPrice($dest, array(new KeranjangItem(0, 0, '', 0, $s_weight, 1, null, 0)));
                         $s_dest = $sss->getDestination($dest);
                         if ($s_price > 0) {
-                            array_push($resp, $sss->getName() . ': ' . Utils::formatCurrency(Utils::ceilToHundred($s_price)) . ' (' . Utils::formatCurrency(Utils::ceilToHundred($s_dest->price)) . '/Kg)');
+                            array_push($resp, $sss->getName() . ': ' . WarungUtils::formatCurrency(WarungUtils::ceilToHundred($s_price)) . ' (' . WarungUtils::formatCurrency(WarungUtils::ceilToHundred($s_dest->price)) . '/Kg)');
                         }
                     }
                 }
@@ -145,7 +145,7 @@ class WarungDisplay {
                         }
 ?><p>
                             <input type="radio" name="product_option" value="<?= $po->id ?>" <?= $checked ?>/>
-    <?= $po->name . '@' . Utils::formatCurrency($po->price) ?>
+    <?= $po->name . '@' . WarungUtils::formatCurrency($po->price) ?>
                         </p><?
                     }
                 } else {
@@ -159,7 +159,7 @@ class WarungDisplay {
                             $selected = 'selected="selected"';
                         }
 ?>
-                        <option value="<?= $po->id ?>" <?= $selected ?>><?= $po->name . '@' . Utils::formatCurrency($po->price) ?></option>
+                        <option value="<?= $po->id ?>" <?= $selected ?>><?= $po->name . '@' . WarungUtils::formatCurrency($po->price) ?></option>
         <?
                     }
         ?>
@@ -169,12 +169,12 @@ class WarungDisplay {
             } else {
                 if (isset($disc_price) && !empty($disc_price)) {
         ?>
-                    <h2><s><?= Utils::formatCurrency($disc_price) ?></s></h2>
-                    <h2><?= Utils::formatCurrency($product["price"]) ?></h2>
+                    <h2><s><?= WarungUtils::formatCurrency($disc_price) ?></s></h2>
+                    <h2><?= WarungUtils::formatCurrency($product["price"]) ?></h2>
 <?
                 } else {
 ?>
-                    <h2><?= Utils::formatCurrency($product["price"]) ?></h2>
+                    <h2><?= WarungUtils::formatCurrency($product["price"]) ?></h2>
     <?
                 }
             }

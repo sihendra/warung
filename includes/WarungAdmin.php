@@ -137,7 +137,7 @@ class WarungAdmin {
                 if (empty($options) || !is_array($options)) {
                     $options = array();
                 }
-                $options['prod_options'] = Utils::parseParametersToObject($_POST, 'prod_option');
+                $options['prod_options'] = WarungUtils::parseParametersToObject($_POST, 'prod_option');
 
                 update_option(Warung::$db_option, $options);
 
@@ -233,7 +233,7 @@ class WarungAdmin {
                             if (empty($options) || !is_array($options)) {
                                 $options = array();
                             }
-                            $options['shipping_byweight'] = Utils::parseParametersToObject($_POST, 'shipping');
+                            $options['shipping_byweight'] = WarungUtils::parseParametersToObject($_POST, 'shipping');
 
                             update_option(Warung::$db_option, $options);
 

@@ -75,7 +75,7 @@ class WarungProduct {
                         if ($v->name == $product_options_name) {
                             $ret["option_name"] = $product_options_name;
                             if (isset($v->value)) {
-                                $ret["option_value"] = Utils::parseJsonMultiline($v->value);
+                                $ret["option_value"] = WarungUtils::parseJsonMultiline($v->value);
                             }
                             if (isset($v->txt)) {
                                 $ret["option_text"] = $v->txt;

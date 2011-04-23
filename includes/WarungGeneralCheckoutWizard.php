@@ -173,8 +173,8 @@ class WarungGeneralCheckoutWizard implements IWarungCheckoutWizard {
                             <div id="wcart_pinfo"><?= $i->name ?></div>
                         </div>
                     </td>
-                    <td><?= Utils::formatWeight($i->weight) ?></td>
-                    <td><?= Utils::formatCurrency($i->price) ?></td>
+                    <td><?= WarungUtils::formatWeight($i->weight) ?></td>
+                    <td><?= WarungUtils::formatCurrency($i->price) ?></td>
                     <td><? if ($showUpdateForm) { ?>
                         <input type="text" name="qty_<?= $i->cartId ?>" value="<?= $i->quantity ?>" size="1" maxlength="5"/>
 <?
@@ -182,7 +182,7 @@ class WarungGeneralCheckoutWizard implements IWarungCheckoutWizard {
                     echo $i->quantity;
                 } ?>
                     </td>
-                    <td><?= Utils::formatCurrency($i->price * $i->quantity) ?> </td>
+                    <td><?= WarungUtils::formatCurrency($i->price * $i->quantity) ?> </td>
                         <? if ($showUpdateForm) { ?>
                         <td><a class="wcart_remove_item" href="<?= $removePage ?>"><div><span>(X)</span></div></a></td>
 <? } ?>
@@ -195,12 +195,12 @@ class WarungGeneralCheckoutWizard implements IWarungCheckoutWizard {
 ?>
                         <tr><td colspan="3" class="wcart-td-footer">&nbsp</td><td class="wcart-td-footer"><input type="submit" name="wc_update" value="Update" title="Klik tombol ini jika ingin mengupdate jumlah barang"/></td><td class="wcart-td-footer">&nbsp;</td></tr>
                 <? } ?>
-                    <tr><td colspan="4" class="wcart-td-footer">Total Sebelum Ongkos Kirim</td><td class="wcart-td-footer"><span class="wcart_total"><?= Utils::formatCurrency($cartSum->totalPrice) ?></span></td></tr>
+                    <tr><td colspan="4" class="wcart-td-footer">Total Sebelum Ongkos Kirim</td><td class="wcart-td-footer"><span class="wcart_total"><?= WarungUtils::formatCurrency($cartSum->totalPrice) ?></span></td></tr>
                 <?
                     if (isset($cartSum->totalShippingPrice)) {
                 ?>
-                        <tr><td colspan="4" class="wcart-td-footer">Ongkos Kirim (<?= Utils::formatWeight($cartSum->totalWeight) ?>) - <?= $cartSum->shippingName ?></td><td class="wcart-td-footer"><span class="wcart_total"><?= Utils::formatCurrency($cartSum->totalShippingPrice) ?></span></td></tr>
-                        <tr><td colspan="4" class="wcart-td-footer">Total Setelah Ongkos Kirim</td><td class="wcart-td-footer"><span class="wcart_total"><?= Utils::formatCurrency($cartSum->totalPrice + $cartSum->totalShippingPrice) ?></span></td></tr>
+                        <tr><td colspan="4" class="wcart-td-footer">Ongkos Kirim (<?= WarungUtils::formatWeight($cartSum->totalWeight) ?>) - <?= $cartSum->shippingName ?></td><td class="wcart-td-footer"><span class="wcart_total"><?= WarungUtils::formatCurrency($cartSum->totalShippingPrice) ?></span></td></tr>
+                        <tr><td colspan="4" class="wcart-td-footer">Total Setelah Ongkos Kirim</td><td class="wcart-td-footer"><span class="wcart_total"><?= WarungUtils::formatCurrency($cartSum->totalPrice + $cartSum->totalShippingPrice) ?></span></td></tr>
                 <? } ?>
                 </table>
 <? if ($showUpdateForm) { ?>
@@ -390,7 +390,7 @@ class WarungGeneralCheckoutWizard implements IWarungCheckoutWizard {
                                                                         }
 ?>
                                                                         <div>
-                                                                            <p><?= $userInfo->name ?>, kami sudah menerima pesanan anda. Untuk pembayaran silahkan transfer ke salah satu nomor rekening berikut sebesar <b><?= Utils::formatCurrency($cartSum->totalPrice + $cartSum->totalShippingPrice) ?></b>:
+                                                                            <p><?= $userInfo->name ?>, kami sudah menerima pesanan anda. Untuk pembayaran silahkan transfer ke salah satu nomor rekening berikut sebesar <b><?= WarungUtils::formatCurrency($cartSum->totalPrice + $cartSum->totalShippingPrice) ?></b>:
                                                                             <ul>
                                                                                 <li>BCA: 5800106950 a.n. Hendra Setiawan</li>
                                                                                 <li>Mandiri: 1270005578586 a.n. Hendra Setiawan</li>
@@ -443,9 +443,9 @@ class WarungGeneralCheckoutWizard implements IWarungCheckoutWizard {
                                                                     }
 
                                                                     function getActionURL($action, $params=null) {
-                                                                        $u = Utils::addParameter($this->actionURL, array("action" => $action));
+                                                                        $u = WarungUtils::addParameter($this->actionURL, array("action" => $action));
                                                                         if (isset($params)) {
-                                                                            $u = Utils::addParameter($u, $params);
+                                                                            $u = WarungUtils::addParameter($u, $params);
                                                                         }
                                                                         return $u;
                                                                     }

@@ -26,7 +26,7 @@ class WarungCartWidget extends WP_Widget {
         $warung = $this->warung;
         $cartImage = $warung->pluginUrl . "images/cart.png";
         $co_page = $wo->getCheckoutURL();
-        $clear_page = Utils::addParameter(get_option("home"), array("wc_clear" => "1"));
+        $clear_page = WarungUtils::addParameter(get_option("home"), array("wc_clear" => "1"));
 
         $cart = new KeranjangService($_SESSION["warung_keranjang"]);
         $cart_sumary = $cart->getSummary();
@@ -39,7 +39,7 @@ class WarungCartWidget extends WP_Widget {
             echo $before_title . '<a href="' . $co_page . '"><img src="' . $cartImage . '" alt="shopping cart"/> Keranjang Belanja</a>' . $after_title; ?>
 
 <? if (!empty($cart_sumary->totalItems)) : ?>
-            <div><a href="<?= $co_page ?>">Ada <?= $cart_sumary->totalItems ?> Item (<?= Utils::formatCurrency($cart_sumary->totalPrice) ?>)</a></div>
+            <div><a href="<?= $co_page ?>">Ada <?= $cart_sumary->totalItems ?> Item (<?= WarungUtils::formatCurrency($cart_sumary->totalPrice) ?>)</a></div>
             <div class="wcart_widget_nav"><a href="<?= $co_page ?>">Lihat pesanan</a> | <a href="<?= $clear_page ?>">Batal</a></div>
 <? else: ?>
                 <div>0 Item, beli dong!</div>

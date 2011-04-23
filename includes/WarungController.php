@@ -53,12 +53,12 @@ class WarungController {
 
         if (isset($_POST['add_to_cart'])) {
             $added_product = WarungProduct::getProductById($_POST['product_id']);
-            $item = Utils::formatToKeranjangItem($added_product, $_POST["product_option"]);
+            $item = WarungUtils::formatToKeranjangItem($added_product, $_POST["product_option"]);
 
             $keranjang->addItem($item, 1);
         } if (isset($_POST['wcart_ordernow'])) {
             $added_product = WarungProduct::getProductById($_POST['product_id']);
-            $item = Utils::formatToKeranjangItem($added_product, $_POST["product_option"]);
+            $item = WarungUtils::formatToKeranjangItem($added_product, $_POST["product_option"]);
 
             $keranjang->addItem($item, 1);
 
