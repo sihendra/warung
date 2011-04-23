@@ -38,46 +38,46 @@ class WarungAdminOrder {
 
         // status order
         $orderStatusClass = "asc";
-        $orderByStatusURL = URLUtil::updateParams($pageURL, array("wrg_order_sortby"=>"status asc"));
+        $orderByStatusURL = WarungURLUtil::updateParams($pageURL, array("wrg_order_sortby"=>"status asc"));
         if ($orderBy == 'status desc') {
             $orderStatusClass = "asc";
-            $orderByStatusURL = URLUtil::updateParams($pageURL, array("wrg_order_sortby"=>"status asc"));
+            $orderByStatusURL = WarungURLUtil::updateParams($pageURL, array("wrg_order_sortby"=>"status asc"));
         } else {
             $orderStatusClass = "desc";
-            $orderByStatusURL = URLUtil::updateParams($pageURL, array("wrg_order_sortby"=>"status desc"));
+            $orderByStatusURL = WarungURLUtil::updateParams($pageURL, array("wrg_order_sortby"=>"status desc"));
         }
 
         // id order
         $orderIdClass = "asc";
-        $orderByIdURL = URLUtil::updateParams($pageURL, array("wrg_order_sortby"=>"id asc"));
+        $orderByIdURL = WarungURLUtil::updateParams($pageURL, array("wrg_order_sortby"=>"id asc"));
         if ($orderBy == 'id desc') {
             $orderIdClass = "asc";
-            $orderByIdURL = URLUtil::updateParams($pageURL, array("wrg_order_sortby"=>"id asc"));
+            $orderByIdURL = WarungURLUtil::updateParams($pageURL, array("wrg_order_sortby"=>"id asc"));
         } else {
             $orderIdClass = "desc";
-            $orderByIdURL = URLUtil::updateParams($pageURL, array("wrg_order_sortby"=>"id desc"));
+            $orderByIdURL = WarungURLUtil::updateParams($pageURL, array("wrg_order_sortby"=>"id desc"));
         }
 
         // date order
         $orderDateClass = "asc";
-        $orderByDateURL = URLUtil::updateParams($pageURL, array("wrg_order_sortby"=>"dtcreated asc"));
+        $orderByDateURL = WarungURLUtil::updateParams($pageURL, array("wrg_order_sortby"=>"dtcreated asc"));
         if ($orderBy == 'dtcreated desc') {
             $orderDateClass = "asc";
-            $orderByDateURL = URLUtil::updateParams($pageURL, array("wrg_order_sortby"=>"dtcreated asc"));
+            $orderByDateURL = WarungURLUtil::updateParams($pageURL, array("wrg_order_sortby"=>"dtcreated asc"));
         } else {
             $orderDateClass = "desc";
-            $orderByDateURL = URLUtil::updateParams($pageURL, array("wrg_order_sortby"=>"dtcreated desc"));
+            $orderByDateURL = WarungURLUtil::updateParams($pageURL, array("wrg_order_sortby"=>"dtcreated desc"));
         }
 
         // lastupdate order
         $orderLastUpdateClass = "asc";
-        $orderByLastUpdateURL = URLUtil::updateParams($pageURL, array("wrg_order_sortby"=>"dtlastupdated asc"));
+        $orderByLastUpdateURL = WarungURLUtil::updateParams($pageURL, array("wrg_order_sortby"=>"dtlastupdated asc"));
         if ($orderBy == 'dtlastupdated desc') {
             $orderLastUpdateClass = "asc";
-            $orderByLastUpdateURL = URLUtil::updateParams($pageURL, array("wrg_order_sortby"=>"dtlastupdated asc"));
+            $orderByLastUpdateURL = WarungURLUtil::updateParams($pageURL, array("wrg_order_sortby"=>"dtlastupdated asc"));
         } else {
             $orderLastUpdateClass = "desc";
-            $orderByLastUpdateURL = URLUtil::updateParams($pageURL, array("wrg_order_sortby"=>"dtlastupdated desc"));
+            $orderByLastUpdateURL = WarungURLUtil::updateParams($pageURL, array("wrg_order_sortby"=>"dtlastupdated desc"));
         }
 
         // get all order

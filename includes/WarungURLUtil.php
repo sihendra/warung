@@ -4,7 +4,7 @@
      * @author Alexander Podgorny
      */
 
-    class URLUtil {
+    class WarungURLUtil {
         /**
          * Splits url into array of it's pieces as follows:
          * [scheme]://[user]:[pass]@[host]/[path]?[query]#[fragment]
