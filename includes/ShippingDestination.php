@@ -1,6 +1,6 @@
 <?php
 
-class ShippingDestination implements IComparable {
+class ShippingDestination {
 
     public $country;
     public $state;

@@ -84,11 +84,7 @@ class WarungOptions {
      * @return IKeranjangService
      */
     public function getCartService() {
-        if (isset($this->cartService)) {
-            return $this->cartService;
-        } else {
-            return $this->cartService = new KeranjangService();
-        }
+        return KeranjangService::getInstance();
     }
 
     /**

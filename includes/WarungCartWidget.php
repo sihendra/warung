@@ -26,9 +26,9 @@ class WarungCartWidget extends WP_Widget {
         $warung = $this->warung;
         $cartImage = $warung->pluginUrl . "images/cart.png";
         $co_page = $wo->getCheckoutURL();
-        $clear_page = WarungUtils::addParameter(get_option("home"), array("wc_clear" => "1"));
+        $clear_page = WarungUtils::addParameter(get_option("home"), array("action" => "clearCart"));
 
-        $cart = new KeranjangService($_SESSION["warung_keranjang"]);
+        $cart = KeranjangService::getInstance();
         $cart_sumary = $cart->getSummary();
 
         extract($args);

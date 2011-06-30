@@ -6,10 +6,28 @@ class KeranjangService implements IKeranjangService {
      * List of items
      * @var Array of KeranjangItem
      */
-    protected $items;
+    protected $items = array();
     protected $summary;
     protected $needRecount;
     protected static $MAX_ITEM = 9999999;
+    
+    public static function getInstance() {
+        $existingCart = $_SESSION[WarungOptions::$CART_SESS_NAME];
+        
+        if (isset($existingCart) && $existingCart instanceof KeranjangService) {
+            // return existing instance
+            return $existingCart;
+        } else {
+            // create new instance
+            $_SESSION[WarungOptions::$CART_SESS_NAME] = new KeranjangService();;
+            
+            return $_SESSION[WarungOptions::$CART_SESS_NAME];
+        }        
+    }
+    
+    private function persist() {
+         $_SESSION[WarungOptions::$CART_SESS_NAME] = $this;
+    }
 
     /**
      * Create KeranjangService from intial items.
@@ -17,13 +35,6 @@ class KeranjangService implements IKeranjangService {
      * @param Array of KeranjangItem $items
      */
     function __construct() {
-        if (!isset($_SESSION[WarungOptions::$CART_SESS_NAME])) {
-            $_SESSION[WarungOptions::$CART_SESS_NAME] = array();
-            $this->items = &$_SESSION[WarungOptions::$CART_SESS_NAME];
-        } else {
-            $this->items = &$_SESSION[WarungOptions::$CART_SESS_NAME];
-            $this->generateSummary();
-        }
     }
 
     function addItem($item, $count) {
@@ -111,6 +122,8 @@ class KeranjangService implements IKeranjangService {
         $ret->totalItems = $totalItems;
 
         $this->summary = $ret;
+        
+        $this->persist();
     }
 
     function getSummary() {
