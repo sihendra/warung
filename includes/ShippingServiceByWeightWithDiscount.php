@@ -7,7 +7,19 @@ class ShippingServiceByWeightWithDiscount extends ShippingServiceByWeight {
     }
 
     function getPrice($destination, $items) {
-
+        
+        // get destination info from db;
+        if (isset($this->destinations[$destination->key()])) {
+            $destination = $this->destinations[$destination->key()];
+        } else {
+            foreach ($this->destinations as $dest) {
+                if ($dest->equals($destination)) {
+                    $destination = $dest;
+                    break;
+                }
+            }
+        }
+        
         // count total weight first
         $total_weight = 0;
         $total_weight_discount = 0;
