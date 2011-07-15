@@ -278,7 +278,7 @@ class WarungGeneralCheckoutWizard implements IWarungCheckoutWizard {
                     <div class="wCart_form_row">
                         <label for="sname">Nama Penerima *</label>
                     <? if ($showUpdateForm) : ?>
-                            <input type="text" name="sname" value="<?= $userInfo->name ?>" maxlength="60"/></div>
+                            <input type="text" name="sname" value="<?= $userInfo->name ?>" maxlength="60"/>
                     <? else: ?>
                         <span><?= $userInfo->name ?></span>
         <? endif; ?>
