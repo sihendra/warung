@@ -48,7 +48,7 @@ class WarungGeneralCheckoutWizard implements IWarungCheckoutWizard {
                     $order->items = $cart->getItems();
                     $order->itemsPrice = $cart->getTotalPrice();
                     $order->shippingInfo = $userInfo;
-                    $order->buyerInfo= $userInfo;
+                    $order->buyerInfo = $userInfo;
                     $order->shippingWeight = $cart->getTotalWeight();
 
                     $orderService = new OrderService();
@@ -76,17 +76,17 @@ class WarungGeneralCheckoutWizard implements IWarungCheckoutWizard {
                     if ($ret) {
                         $home_url = get_option('home');
                         ob_start();
-    ?>
+                        ?>
                         <div class="wcart_info">
                             <p>Informasi pemesanan juga sudah kami kirim ke <b>'<?= $email_pemesan ?>'.</b> Mohon periksa juga folder <b>'Junk'</b> jika tidak ada di inbox.</p>
                         </div>
                         <div class="wcart_general_container">
-    <?
-                        echo $customer_message;
-    ?>
-                    </div>
-                    <div><br/><a href="<?= $home_url ?>" class="wcart_button_url">Kembali berbelanja &gt;&gt;</a></div>
-    <?
+                            <?
+                            echo $customer_message;
+                            ?>
+                        </div>
+                        <div><br/><a href="<?= $home_url ?>" class="wcart_button_url">Kembali berbelanja &gt;&gt;</a></div>
+                        <?
                         $cart->emptyCart();
                         $ret = ob_get_contents();
                         ob_get_clean();
@@ -140,363 +140,365 @@ class WarungGeneralCheckoutWizard implements IWarungCheckoutWizard {
         if (isset($destination)) {
             $cartSum = $kasir->getSummaryWithShippping($destination, $cart, null);
         }
-?>
-        <div class="wcart_detailed_cart_container">
-<?
-        if (!empty($cartEntry)) {
-
-            $clearPage = $this->getActionURL("clearCart");
-?>
-            <div><a name="w_cart"/><h2><? _e('Keranjang Belanja') ?></h2></div>
-            <div id="wcart-detailed-div">
-    <?
-            if ($showUpdateForm) {
-    ?>
-                    <form method="POST" action="<?= $this->getActionURL("updateCart") ?>">
-                         <? wp_nonce_field('warung_detailed_cart','warung_detailed_cart_nonce'); ?>
-        <?
-            }
         ?>
-                <table id="wcart-detailed">
-                    <tr><th><? _e('Item') ?></th><th><? _e('Berat') ?></th><th><? _e('Harga') ?></th><th><? _e('Jumlah') ?></th><th><? _e('Total') ?></th><th>-</th></tr>
+        <div class="wcart_detailed_cart_container">
             <?
-            foreach ($cartEntry as $i) {
-                //name|price[|type]
-                $removePage = $this->getActionURL("removeCartItem", array("ci" => $i->cartId));
-                $productInfo = $i->attachment["product"];
-                $productURL = get_permalink($i->productId);
-            ?>
-                <tr>
-                    <td>
-                        <div>
-                            <div id="wcart_item_thumbnail"><a href="<?= $productURL ?>"><img src="<?= $productInfo["thumbnail"] ?>" alt="<?= $i->name ?>"/></a></div>
-                            <div id="wcart_pinfo"><?= $i->name ?></div>
-                        </div>
-                    </td>
-                    <td><?= WarungUtils::formatWeight($i->weight) ?></td>
-                    <td><?= WarungUtils::formatCurrency($i->price) ?></td>
-                    <td><? if ($showUpdateForm) { ?>
-                        <input type="text" name="qty_<?= $i->cartId ?>" value="<?= $i->quantity ?>" size="1" maxlength="5"/>
-<?
-                } else {
-                    echo $i->quantity;
-                } ?>
-                    </td>
-                    <td><?= WarungUtils::formatCurrency($i->price * $i->quantity) ?> </td>
-                        <? if ($showUpdateForm) { ?>
-                        <td><a class="wcart_remove_item" href="<?= $removePage ?>"><div><span>(X)</span></div></a></td>
-<? } ?>
-                </tr>
+            if (!empty($cartEntry)) {
 
-<?
-                    }
-
-                    if ($showUpdateForm) {
-?>
-                        <tr><td colspan="3" class="wcart-td-footer">&nbsp</td><td class="wcart-td-footer"><input type="submit" name="wc_update" value="Update" title="Klik tombol ini jika ingin mengupdate jumlah barang"/></td><td class="wcart-td-footer">&nbsp;</td></tr>
-                <? } ?>
-                    <tr><td colspan="4" class="wcart-td-footer">Total Sebelum Ongkos Kirim</td><td class="wcart-td-footer"><span class="wcart_total"><?= WarungUtils::formatCurrency($cartSum->totalPrice) ?></span></td></tr>
-                <?
-                    if (isset($cartSum->totalShippingPrice)) {
+                $clearPage = $this->getActionURL("clearCart");
                 ?>
-                        <tr><td colspan="4" class="wcart-td-footer">Ongkos Kirim (<?= WarungUtils::formatWeight($cartSum->totalWeight) ?>) - <?= $cartSum->shippingName ?></td><td class="wcart-td-footer"><span class="wcart_total"><?= WarungUtils::formatCurrency($cartSum->totalShippingPrice) ?></span></td></tr>
-                        <tr><td colspan="4" class="wcart-td-footer">Total Setelah Ongkos Kirim</td><td class="wcart-td-footer"><span class="wcart_total"><?= WarungUtils::formatCurrency($cartSum->totalPrice + $cartSum->totalShippingPrice) ?></span></td></tr>
+                <div><a name="w_cart"/><h2><? _e('Keranjang Belanja') ?></h2></div>
+                <div id="wcart-detailed-div">
+                    <?
+                    if ($showUpdateForm) {
+                        ?>
+                        <form method="POST" action="<?= $this->getActionURL("updateCart") ?>">
+                            <? wp_nonce_field('warung_detailed_cart', 'warung_detailed_cart_nonce'); ?>
+                            <?
+                        }
+                        ?>
+                        <table id="wcart-detailed">
+                            <tr><th><? _e('Item') ?></th><th><? _e('Berat') ?></th><th><? _e('Harga') ?></th><th><? _e('Jumlah') ?></th><th><? _e('Total') ?></th><th>-</th></tr>
+                            <?
+                            foreach ($cartEntry as $i) {
+                                //name|price[|type]
+                                $removePage = $this->getActionURL("removeCartItem", array("ci" => $i->cartId));
+                                $productInfo = $i->attachment["product"];
+                                $productURL = get_permalink($i->productId);
+                                ?>
+                                <tr>
+                                    <td>
+                                        <div>
+                                            <div id="wcart_item_thumbnail"><a href="<?= $productURL ?>"><img src="<?= $productInfo["thumbnail"] ?>" alt="<?= $i->name ?>"/></a></div>
+                                            <div id="wcart_pinfo"><?= $i->name ?></div>
+                                        </div>
+                                    </td>
+                                    <td><?= WarungUtils::formatWeight($i->weight) ?></td>
+                                    <td><?= WarungUtils::formatCurrency($i->price) ?></td>
+                                    <td><? if ($showUpdateForm) { ?>
+                                            <input type="text" name="qty_<?= $i->cartId ?>" value="<?= $i->quantity ?>" size="1" maxlength="5"/>
+                                            <?
+                                        } else {
+                                            echo $i->quantity;
+                                        }
+                                        ?>
+                                    </td>
+                                    <td><?= WarungUtils::formatCurrency($i->price * $i->quantity) ?> </td>
+                                    <? if ($showUpdateForm) { ?>
+                                        <td><a class="wcart_remove_item" href="<?= $removePage ?>"><div><span>(X)</span></div></a></td>
                 <? } ?>
-                </table>
-<? if ($showUpdateForm) { ?>
-                    <div id="wcart_detailed_nav">
-                        <a href="<?= $homePageURL ?>" class="wcart_button_url">Kembali Berbelanja</a> atau isi form di bawah ini jika ingin lanjut ke pemesanan.
-                    </div>
+                                </tr>
 
-                </form>
-<?
-                    }
-?>
-            </div>
-<?
-                } else {
-?>
-                <p id="status"><?php _e('Keranjang belanja kosong') ?><a href="<?= $homePageURL ?>" class="wcart_button_url"> <?php _e('Lihat Produk') ?></a></p><?php
-                }
-?>
-            </div>
-    <?
-                $ret = ob_get_contents();
-                ob_end_clean();
+                                <?
+                            }
 
-
-                return $ret;
-            }
-
-            public function showShippingForm($showUpdateForm=true) {
-                ob_start();
-
-                $warungOpt = new WarungOptions();
-                $kasir = $warungOpt->getKasirService();
-
-                $userInfo = $kasir->getSavedUserInfo();
-
-                $countries = $kasir->getCountries();
-                $country = array_pop($countries);
-                $cities = $kasir->getCitiesByCountry($country);
-
-                foreach ($cities as $city) {
-                    break;
-                }
-
-                if (isset($userInfo->city)) {
-                    $city = $userInfo->city;
-                }
-
-                $co_page = $warungOpt->getCheckoutURL();
-    ?>
-                <div class="wcart_shipping_container">
-                    <div><a name="w_shipping"/><h2>Informasi Pengiriman</h2></div>
-                    <div id="wCart_shipping_form">
-<? if ($showUpdateForm) : ?>
-                            <form method="POST" name="wCart_shipping_form" id="wCart_shipping_form2" action="<?= $this->getActionURL('confirm') ?>">
-                                <? wp_nonce_field('warung_shipping_form','warung_shipping_form_nonce'); ?>
-<? endif; ?>
-                                <div class="wCart_form_row">
-                                    <label for="semail">Email *</label>
-        <? if ($showUpdateForm) : ?>
-                                    <input type="text" name="semail" value="<?= $userInfo->email ?>" maxlength="60"/>
-            <? else: ?>
-                                <span><?= $userInfo->email ?></span>
-<? endif; ?>
+                            if ($showUpdateForm) {
+                                ?>
+                                <tr><td colspan="3" class="wcart-td-footer">&nbsp</td><td class="wcart-td-footer"><input type="submit" name="wc_update" value="Update" title="Klik tombol ini jika ingin mengupdate jumlah barang"/></td><td class="wcart-td-footer">&nbsp;</td></tr>
+                            <? } ?>
+                            <tr><td colspan="4" class="wcart-td-footer">Total Sebelum Ongkos Kirim</td><td class="wcart-td-footer"><span class="wcart_total"><?= WarungUtils::formatCurrency($cartSum->totalPrice) ?></span></td></tr>
+                            <?
+                            if (isset($cartSum->totalShippingPrice)) {
+                                ?>
+                                <tr><td colspan="4" class="wcart-td-footer">Ongkos Kirim (<?= WarungUtils::formatWeight($cartSum->totalWeight) ?>) - <?= $cartSum->shippingName ?></td><td class="wcart-td-footer"><span class="wcart_total"><?= WarungUtils::formatCurrency($cartSum->totalShippingPrice) ?></span></td></tr>
+                                <tr><td colspan="4" class="wcart-td-footer">Total Setelah Ongkos Kirim</td><td class="wcart-td-footer"><span class="wcart_total"><?= WarungUtils::formatCurrency($cartSum->totalPrice + $cartSum->totalShippingPrice) ?></span></td></tr>
+                        <? } ?>
+                        </table>
+            <? if ($showUpdateForm) { ?>
+                            <div id="wcart_detailed_nav">
+                                <a href="<?= $homePageURL ?>" class="wcart_button_url">Kembali Berbelanja</a> atau isi form di bawah ini jika ingin lanjut ke pemesanan.
                             </div>
 
-                            <div class="wCart_form_row">
-                                <label for="sphone">HP (handphone) *</label>
-                <? if ($showUpdateForm) : ?>
-                                <input type="text" name="sphone" value="<?= $userInfo->phone ?>" maxlength="31"/>
-<? else: ?>
-                                    <span><?= $userInfo->phone ?></span>
-<? endif; ?>
-                                </div>
-                                <div class="wCart_form_row">
-                                    <label for="sname">Nama Penerima *</label>
-<? if ($showUpdateForm) : ?>
-                                        <input type="text" name="sname" value="<?= $userInfo->name ?>" maxlength="60"/></div>
-<? else: ?>
-                                        <span><?= $userInfo->name ?></span>
-<? endif; ?>
-                                        <div class="wCart_form_row">
-                                            <label for="saddress">Alamat *</label>
-            <? if ($showUpdateForm) : ?>
-                                                    <textarea name="saddress" ><?= $userInfo->address ?></textarea>
-            <? else: ?>
-                                                        <span><?= $userInfo->address ?></span>
-<? endif; ?>
-                                                    </div>
-                                                    <div class="wCart_form_row">
-                                                        <label for="scity">Kota</label>
-<? if ($showUpdateForm) : ?>
-                <?= $this->form_select('scity', $cities, $city, array(&$this, 'city_callback'), false) ?>
-<? else: ?>
-                                                            <span><?= $userInfo->city ?></span>
-<? endif; ?>
-                                                        </div>
-                                                        <input type="hidden" name="scountry" value="<?= $userInfo->country ?>"/>
-                                                        <div class="wCart_form_row">
-                                                            <label for="sadditional_info">Info Tambahan</label>
-                <? if ($showUpdateForm) : ?>
-                                                                <textarea name="sadditional_info"><?= $userInfo->additionalInfo ?></textarea>
-<? else: ?>
-                                                                    <span><?= $userInfo->additionalInfo ?></span>
-<? endif; ?>
-                                                                </div>
+                        </form>
+                        <?
+                    }
+                    ?>
+                </div>
+                <?
+            } else {
+                ?>
+                <p id="status"><?php _e('Keranjang belanja kosong') ?><a href="<?= $homePageURL ?>" class="wcart_button_url"> <?php _e('Lihat Produk') ?></a></p><?php
+        }
+        ?>
+        </div>
+        <?
+        $ret = ob_get_contents();
+        ob_end_clean();
 
 
-<? if ($showUpdateForm) : ?>
+        return $ret;
+    }
 
-                                                                    <div class="wCart_form_row">
-                                                                        <input type="hidden" name="step" value="2"/>
-                                                                        <input type="submit" name="scheckout" class="submit" value="Lanjut"/>
-                                                                    </div>
+    public function showShippingForm($showUpdateForm=true) {
+        ob_start();
 
-                                                                </form>
-<? endif; ?>
-                                                                </div>
-                                                            </div>
-<?
-                                                                        $ret = ob_get_contents();
-                                                                        ob_end_clean();
+        $warungOpt = new WarungOptions();
+        $kasir = $warungOpt->getKasirService();
 
-                                                                        return $ret;
-                                                                    }
+        $userInfo = $kasir->getSavedUserInfo();
 
-                                                                    public function showConfirmation() {
-                                                                        ob_start();
+        $countries = $kasir->getCountries();
+        $country = array_pop($countries);
+        $cities = $kasir->getCitiesByCountry($country);
 
-                                                                        $ret = "Jika data sudah benar, klik tombol 'Pesan' di bawah, atau jika masih ada yang salah klik tombol 'Edit' untuk membenarkan";
+        foreach ($cities as $city) {
+            break;
+        }
 
-                                                                        // get edit url
-                                                                        $wo = new WarungOptions();
-                                                                        $editURL = $wo->getCheckoutURL();
+        if (isset($userInfo->city)) {
+            $city = $userInfo->city;
+        }
 
-                                                                        echo $this->showDetailedCart(false);
-                                                                        // show edit url
-?><p><a class="wcart_button_url" href="<?= $editURL . "#w_cart" ?>">Edit</a></p><?
-                                                                        echo $this->showShippingForm(false);
-                                                                        // show edit url
-?><p><a class="wcart_button_url" href="<?= $editURL . "#w_shipping" ?>">Edit</a></p><?
-?>
-                                                                        <div style="padding: 10px;">
-                                                                            <form method="POST" id="wCart_confirmation" action="<?= $this->getActionURL("pay") ?>">
-                                                                                <input type="submit" name="send_order" value="Pesan"/>
-                                                                            </form>
-                                                                        </div>
-<?
-                                                                        $ret .= ob_get_contents();
-                                                                        ob_end_clean();
+        $co_page = $warungOpt->getCheckoutURL();
+        ?>
+        <div class="wcart_shipping_container">
+            <div><a name="w_shipping"/><h2>Informasi Pengiriman</h2></div>
+            <div id="wCart_shipping_form">
+                    <? if ($showUpdateForm) : ?>
+                    <form method="POST" name="wCart_shipping_form" id="wCart_shipping_form2" action="<?= $this->getActionURL('confirm') ?>">
+                        <? wp_nonce_field('warung_shipping_form', 'warung_shipping_form_nonce'); ?>
+        <? endif; ?>
+                    <div class="wCart_form_row">
+                        <label for="semail">Email *</label>
+                        <? if ($showUpdateForm) : ?>
+                            <input type="text" name="semail" value="<?= $userInfo->email ?>" maxlength="60"/>
+                        <? else: ?>
+                            <span><?= $userInfo->email ?></span>
+        <? endif; ?>
+                    </div>
 
-                                                                        return $ret;
-                                                                    }
+                    <div class="wCart_form_row">
+                        <label for="sphone">HP (handphone) *</label>
+                        <? if ($showUpdateForm) : ?>
+                            <input type="text" name="sphone" value="<?= $userInfo->phone ?>" maxlength="31"/>
+                        <? else: ?>
+                            <span><?= $userInfo->phone ?></span>
+        <? endif; ?>
+                    </div>
+                    <div class="wCart_form_row">
+                        <label for="sname">Nama Penerima *</label>
+                    <? if ($showUpdateForm) : ?>
+                            <input type="text" name="sname" value="<?= $userInfo->name ?>" maxlength="60"/></div>
+                    <? else: ?>
+                        <span><?= $userInfo->name ?></span>
+        <? endif; ?>
+                    </div>
+                    <div class="wCart_form_row">
+                        <label for="saddress">Alamat *</label>
+                        <? if ($showUpdateForm) : ?>
+                            <textarea name="saddress" ><?= $userInfo->address ?></textarea>
+                        <? else: ?>
+                            <span><?= $userInfo->address ?></span>
+        <? endif; ?>
+                    </div>
+                    <div class="wCart_form_row">
+                        <label for="scity">Kota</label>
+                        <? if ($showUpdateForm) : ?>
+                            <?= $this->form_select('scity', $cities, $city, array(&$this, 'city_callback'), false) ?>
+                        <? else: ?>
+                            <span><?= $userInfo->city ?></span>
+        <? endif; ?>
+                    </div>
+                    <input type="hidden" name="scountry" value="<?= $userInfo->country ?>"/>
+                    <div class="wCart_form_row">
+                        <label for="sadditional_info">Info Tambahan</label>
+                        <? if ($showUpdateForm) : ?>
+                            <textarea name="sadditional_info"><?= $userInfo->additionalInfo ?></textarea>
+                        <? else: ?>
+                            <span><?= $userInfo->additionalInfo ?></span>
+        <? endif; ?>
+                    </div>
 
-                                                                    public function showPayOk($isEmailView = false, $params=null) {
-                                                                        ob_start();
 
-                                                                        $warungOpt = new WarungOptions();
-                                                                        $cart = $warungOpt->getCartService();
-                                                                        $kasir = $warungOpt->getKasirService();
+        <? if ($showUpdateForm) : ?>
 
-                                                                        $cartEntry;
-                                                                        $cartSum;
-                                                                        if (!empty($cart)) {
-                                                                            $cartEntry = $cart->getItems();
-                                                                            $cartSum = $cart->getSummary();
-                                                                        }
+                        <div class="wCart_form_row">
+                            <input type="hidden" name="step" value="2"/>
+                            <input type="submit" name="scheckout" class="submit" value="Lanjut"/>
+                        </div>
 
-                                                                        $userInfo = $kasir->getSavedUserInfo();
-                                                                        $destination;
-                                                                        // only allow new version, old version city is stored as array
-                                                                        if (isset($userInfo->city)) {
-                                                                            $destination = new ShippingDestination($userInfo->country, '', $userInfo->city, 0);
-                                                                        }
+                    </form>
+        <? endif; ?>
+            </div>
+        </div>
+        <?
+        $ret = ob_get_contents();
+        ob_end_clean();
 
-                                                                        // jika sudah ada destination hitung plus ongkir
-                                                                        if (isset($destination)) {
-                                                                            $cartSum = $kasir->getSummaryWithShippping($destination, $cart, null);
-                                                                        }
+        return $ret;
+    }
 
-                                                                        if (!empty($cartItems)) {
-                                                                            ob_end_clean();
-                                                                            return __('Keranjang belanja kosong');
-                                                                        }
+    public function showConfirmation() {
+        ob_start();
 
-                                                                        if (is_array($params)) {
-                                                                            extract($params);
-                                                                        }
-?>
-                                                                        <div>
-                                                                            <p><?= $userInfo->name ?>, kami sudah menerima pesanan anda. Untuk pembayaran silahkan transfer ke salah satu nomor rekening berikut sebesar <b><?= WarungUtils::formatCurrency($cartSum->totalPrice + $cartSum->totalShippingPrice) ?></b>:
-                                                                            <ul>
-                                                                                <li>BCA: 5800106950 a.n. Hendra Setiawan</li>
-                                                                                <li>Mandiri: 1270005578586 a.n. Hendra Setiawan</li>
-                                                                            </ul>
-                                                                            <br/>
-                                                                        	            Setelah pembayaran dilakukan harap lakukan konfirmasi pembayaran agar pesanan dapat segera kami proses.
-                                                                        	            Konfirmasi dapat dilakukan dengan cara me-reply email pemesanan ini atau menghubungi kami di:
-                                                                            <ul>
-                                                                                <li>HP: 08889693342, 081808815325 </li>
-                                                                                <li>Email: info@warungsprei.com</li>
-                                                                                <li>YM: reni_susanto, warungsprei_hendra</li>
-                                                                            </ul>
-                                                                            <br/>
-                                                                            <br/>
-                                                                        	            Terima Kasih,<br/>
-                                                                        	            Warungsprei.com<br/>
-                                                                        	            -----------------------------------
-                                                                            <br/>
-<?
-                                                                        // ####### show detailed cart
-                                                                        echo $this->showDetailedCart(false);
+        $ret = "Jika data sudah benar, klik tombol 'Pesan' di bawah, atau jika masih ada yang salah klik tombol 'Edit' untuk membenarkan";
 
-                                                                        // ####### show shipping info
-?>
-                                                                        <br/>
-                                                                        <br/>
-                                                                        <!--shipping info-->
-                                                                        <div><h2>Informasi Pengiriman</h2></div>
-                                                                        <table>
-    <? ?>
-                                                                            <tr><td>Email</td><td>&nbsp;:&nbsp;</td><td><?= $userInfo->email ?></td></tr>
-                                                                            <tr><td>Telepon</td><td>&nbsp;:&nbsp;</td><td><?= $userInfo->phone ?></td></tr>
-                                                                            <tr><td>Jasa Pengiriman</td><td>&nbsp;:&nbsp;</td><td><?= $cartSum->shippingName ?></td></tr>
-                                                                            <tr><td>Nama Penerima</td><td>&nbsp;:&nbsp;</td><td><?= $userInfo->name ?></td></tr>
-                                                                            <tr><td>Alamat</td><td>&nbsp;:&nbsp;</td><td><?= $userInfo->address ?></td></tr>
-                                                                            <tr><td>Kota</td><td>&nbsp;:&nbsp;</td><td><?= $userInfo->city ?></td></tr>
-                                                                        <tr><td>Info Tambahan</td><td>&nbsp;:&nbsp;</td><td><?= $userInfo->additionalInfo ?></td></tr>
+        // get edit url
+        $wo = new WarungOptions();
+        $editURL = $wo->getCheckoutURL();
 
-                                                                    </table>
-                                                                </div>
-<?
-                                                                        $ret = ob_get_contents();
-                                                                        ob_end_clean();
+        echo $this->showDetailedCart(false);
+        // show edit url
+        ?>
+        <p><a class="wcart_button_url" href="<?= $editURL . "#w_cart" ?>">Edit</a></p>
+        <?
+        echo $this->showShippingForm(false);
+        // show edit url
+        ?>
+        <p><a class="wcart_button_url" href="<?= $editURL . "#w_shipping" ?>">Edit</a></p>
+        <div style="padding: 10px;">
+            <form method="POST" id="wCart_confirmation" action="<?= $this->getActionURL("pay") ?>">
+                <input type="submit" name="send_order" value="Pesan"/>
+            </form>
+        </div>
+        <?
+        $ret .= ob_get_contents();
+        ob_end_clean();
 
-                                                                        return $ret;
-                                                                    }
+        return $ret;
+    }
 
-                                                                    public function showPayError($isEmailView = false, $params=null) {
-                                                                        return '<p>' . __('Maaf kami blm dapat memproses pesanan anda silahkan coba beberapa saat lagi') . '</p>';
-                                                                    }
+    public function showPayOk($isEmailView = false, $params=null) {
+        ob_start();
 
-                                                                    function getActionURL($action, $params=null) {
-                                                                        $u = WarungUtils::addParameter($this->actionURL, array("action" => $action));
-                                                                        if (isset($params)) {
-                                                                            $u = WarungUtils::addParameter($u, $params);
-                                                                        }
-                                                                        return $u;
-                                                                    }
+        $warungOpt = new WarungOptions();
+        $cart = $warungOpt->getCartService();
+        $kasir = $warungOpt->getKasirService();
 
-                                                                    
+        $cartEntry;
+        $cartSum;
+        if (!empty($cart)) {
+            $cartEntry = $cart->getItems();
+            $cartSum = $cart->getSummary();
+        }
 
-                                                                    function form_selected($selname, $value) {
-                                                                        if ($selname == $value) {
-                                                                            return 'selected="selected"';
-                                                                        }
-                                                                        return '';
-                                                                    }
+        $userInfo = $kasir->getSavedUserInfo();
+        $destination;
+        // only allow new version, old version city is stored as array
+        if (isset($userInfo->city)) {
+            $destination = new ShippingDestination($userInfo->country, '', $userInfo->city, 0);
+        }
 
-                                                                    function form_select($name, $arr, $selected, $callback='', $isArrayOfObject=false, $style='') {
-                                                                        $ret = '<select id="' . $name . '" name="' . $name . '" ' . $style . '><option value="--- Please Select ---">--- Please Select ---</option>';
-                                                                        if (empty($callback)) {
-                                                                            foreach ($arr as $k => $v) {
-                                                                                $ret .= '<option value="' . $k . '" ' . $this->form_selected($selected, $k) . '>' . $v . '</option>';
-                                                                            }
-                                                                        } else {
-                                                                            if ($isArrayOfObject) {
-                                                                                foreach ($arr as $v) {
-                                                                                    $r = call_user_func($callback, $v);
-                                                                                    if (empty($selected) && isset($r['default'])) {
-                                                                                        $selected = $r['value'];
-                                                                                    }
-                                                                                    $ret .= '<option value="' . $r['value'] . '" ' . $this->form_selected($selected, $r['value']) . '>' . $r['name'] . '</option>';
-                                                                                }
-                                                                            } else {
-                                                                                foreach ($arr as $k => $v) {
-                                                                                    $r = call_user_func($callback, $k, $v);
-                                                                                    if (empty($selected) && isset($r['default'])) {
-                                                                                        $selected = $r['value'];
-                                                                                    }
-                                                                                    $ret .= '<option value="' . $r['value'] . '" ' . $this->form_selected($selected, $r['value']) . '>' . $r['name'] . '</option>';
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                        $ret .= '</select>';
-                                                                        return $ret;
-                                                                    }
+        // jika sudah ada destination hitung plus ongkir
+        if (isset($destination)) {
+            $cartSum = $kasir->getSummaryWithShippping($destination, $cart, null);
+        }
 
-                                                                    function kv_callback($k, $v) {
-                                                                        return array('value' => $v, 'name' => $v);
-                                                                    }
+        if (!empty($cartItems)) {
+            ob_end_clean();
+            return __('Keranjang belanja kosong');
+        }
 
-                                                                    function city_callback($c) {
-                                                                        $arr = array('value' => $c, 'name' => $c);
+        if (is_array($params)) {
+            extract($params);
+        }
+        ?>
+        <div>
+            <p><?= $userInfo->name ?>, kami sudah menerima pesanan anda. Untuk pembayaran silahkan transfer ke salah satu nomor rekening berikut sebesar <b><?= WarungUtils::formatCurrency($cartSum->totalPrice + $cartSum->totalShippingPrice) ?></b>:
+            <ul>
+                <li>BCA: 5800106950 a.n. Hendra Setiawan</li>
+                <li>Mandiri: 1270005578586 a.n. Hendra Setiawan</li>
+            </ul>
+            <br/>
+            Setelah pembayaran dilakukan harap lakukan konfirmasi pembayaran agar pesanan dapat segera kami proses.
+            Konfirmasi dapat dilakukan dengan cara me-reply email pemesanan ini atau menghubungi kami di:
+            <ul>
+                <li>HP: 08889693342, 081808815325 </li>
+                <li>Email: info@warungsprei.com</li>
+                <li>YM: reni_susanto, warungsprei_hendra</li>
+            </ul>
+            <br/>
+            <br/>
+            Terima Kasih,<br/>
+            Warungsprei.com<br/>
+            -----------------------------------
+            <br/>
+            <?
+            // ####### show detailed cart
+            echo $this->showDetailedCart(false);
 
-                                                                        return $arr;
-                                                                    }
+            // ####### show shipping info
+            ?>
+            <br/>
+            <br/>
+            <!--shipping info-->
+            <div><h2>Informasi Pengiriman</h2></div>
+            <table>
+                <? ?>
+                <tr><td>Email</td><td>&nbsp;:&nbsp;</td><td><?= $userInfo->email ?></td></tr>
+                <tr><td>Telepon</td><td>&nbsp;:&nbsp;</td><td><?= $userInfo->phone ?></td></tr>
+                <tr><td>Jasa Pengiriman</td><td>&nbsp;:&nbsp;</td><td><?= $cartSum->shippingName ?></td></tr>
+                <tr><td>Nama Penerima</td><td>&nbsp;:&nbsp;</td><td><?= $userInfo->name ?></td></tr>
+                <tr><td>Alamat</td><td>&nbsp;:&nbsp;</td><td><?= $userInfo->address ?></td></tr>
+                <tr><td>Kota</td><td>&nbsp;:&nbsp;</td><td><?= $userInfo->city ?></td></tr>
+                <tr><td>Info Tambahan</td><td>&nbsp;:&nbsp;</td><td><?= $userInfo->additionalInfo ?></td></tr>
 
-                                                                }
+            </table>
+        </div>
+        <?
+        $ret = ob_get_contents();
+        ob_end_clean();
+
+        return $ret;
+    }
+
+    public function showPayError($isEmailView = false, $params=null) {
+        return '<p>' . __('Maaf kami blm dapat memproses pesanan anda silahkan coba beberapa saat lagi') . '</p>';
+    }
+
+    function getActionURL($action, $params=null) {
+        $u = WarungUtils::addParameter($this->actionURL, array("action" => $action));
+        if (isset($params)) {
+            $u = WarungUtils::addParameter($u, $params);
+        }
+        return $u;
+    }
+
+    function form_selected($selname, $value) {
+        if ($selname == $value) {
+            return 'selected="selected"';
+        }
+        return '';
+    }
+
+    function form_select($name, $arr, $selected, $callback='', $isArrayOfObject=false, $style='') {
+        $ret = '<select id="' . $name . '" name="' . $name . '" ' . $style . '><option value="--- Please Select ---">--- Please Select ---</option>';
+        if (empty($callback)) {
+            foreach ($arr as $k => $v) {
+                $ret .= '<option value="' . $k . '" ' . $this->form_selected($selected, $k) . '>' . $v . '</option>';
+            }
+        } else {
+            if ($isArrayOfObject) {
+                foreach ($arr as $v) {
+                    $r = call_user_func($callback, $v);
+                    if (empty($selected) && isset($r['default'])) {
+                        $selected = $r['value'];
+                    }
+                    $ret .= '<option value="' . $r['value'] . '" ' . $this->form_selected($selected, $r['value']) . '>' . $r['name'] . '</option>';
+                }
+            } else {
+                foreach ($arr as $k => $v) {
+                    $r = call_user_func($callback, $k, $v);
+                    if (empty($selected) && isset($r['default'])) {
+                        $selected = $r['value'];
+                    }
+                    $ret .= '<option value="' . $r['value'] . '" ' . $this->form_selected($selected, $r['value']) . '>' . $r['name'] . '</option>';
+                }
+            }
+        }
+        $ret .= '</select>';
+        return $ret;
+    }
+
+    function kv_callback($k, $v) {
+        return array('value' => $v, 'name' => $v);
+    }
+
+    function city_callback($c) {
+        $arr = array('value' => $c, 'name' => $c);
+
+        return $arr;
+    }
+
+}
 ?>
