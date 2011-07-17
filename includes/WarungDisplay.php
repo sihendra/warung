@@ -122,6 +122,12 @@ class WarungDisplay {
                     <input type="hidden" name="product_id" value="<?= $product["id"] ?>">
 <?
             if (!empty($product["option_value"])) {
+                
+                ?>
+                    <h3><?=  _e('Pilih Produk')?></h3>
+                    <div class="wcart_product_opt">
+                <?
+                
                 $isRadioOption = true;
                 if ($isRadioOption) {
 
@@ -143,10 +149,11 @@ class WarungDisplay {
                         if (isset($po->default)) {
                             $checked = "checked=checked";
                         }
-?><p>
-                            <input type="radio" name="product_option" value="<?= $po->id ?>" <?= $checked ?>/>
-    <?= $po->name . '@' . WarungUtils::formatCurrency($po->price) ?>
-                        </p><?
+                        ?>
+                            <input type="radio" name="product_option" id="a2c-r-<?=$po->id?>" value="<?= $po->id ?>" <?= $checked ?>/>
+                            <label for="a2c-r-<?=$po->id?>">
+        <?= $po->name . '<span>' . WarungUtils::formatCurrency($po->price) .'</span>' ?>
+                        </label><br/><?
                     }
                 } else {
     ?>
@@ -159,22 +166,24 @@ class WarungDisplay {
                             $selected = 'selected="selected"';
                         }
 ?>
-                        <option value="<?= $po->id ?>" <?= $selected ?>><?= $po->name . '@' . WarungUtils::formatCurrency($po->price) ?></option>
+                        <option value="<?= $po->id ?>" <?= $selected ?>><?= $po->name . '<span>' . WarungUtils::formatCurrency($po->price) .'</span>' ?></option>
         <?
                     }
         ?>
                 </select>
         <?
                 }
+                
+                ?></div><?
             } else {
                 if (isset($disc_price) && !empty($disc_price)) {
         ?>
-                    <h2><s><?= WarungUtils::formatCurrency($disc_price) ?></s></h2>
-                    <h2><?= WarungUtils::formatCurrency($product["price"]) ?></h2>
+                    <span><s><?= WarungUtils::formatCurrency($disc_price) ?></s></span>
+                    <span><?= WarungUtils::formatCurrency($product["price"]) ?></span>
 <?
                 } else {
 ?>
-                    <h2><?= WarungUtils::formatCurrency($product["price"]) ?></h2>
+                    <span class="ws_price"><?= WarungUtils::formatCurrency($product["price"]) ?></span>
     <?
                 }
             }
