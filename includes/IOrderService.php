@@ -30,5 +30,7 @@ interface IOrderService {
     function getOrderById($orderId);
     function getAllOrders();
     function getAllStatus();
+    
+    function getOrderStat();
 }
 ?>

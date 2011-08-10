@@ -346,5 +346,27 @@ class OrderService implements IOrderService {
         $ret[self::$STATUS_CANCELED]="Canceled";
         return $ret;
     }
+
+    public function getOrderStat() {
+        global $wpdb;
+
+        $ret = false;
+
+        $sql = $wpdb->query("
+                SELECT date_format(o.dtlastupdated, '%b') month, o.status, sum(i.quantity) total 
+                 FROM $this->orderTable o left join $this->orderItemsTable i on o.id = i.order_id
+                where o.dtlastupdated >= date_format(CURRENT_DATE, '%Y-01-01')
+                group by date_format(o.dtlastupdated, '%b'), o.status
+                order by o.dtlastupdated desc, o.status desc
+                ");
+
+        $result = $wpdb->get_results($sql);
+
+        if($result) {
+            $ret = $result;
+        }
+        
+        return $ret;
+    }
 }
 ?>
