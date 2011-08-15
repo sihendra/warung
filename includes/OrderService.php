@@ -16,16 +16,16 @@ class OrderService implements IOrderService {
     private $orderItemsTable;
 
     // update statuses
-    public static $STATUS_ORDERED = "(1)ordered";
-    public static $STATUS_PAYMENT_NOT_VERIFIED= "(2)payment_not_verified";
-    public static $STATUS_PAYMENT_VERIFIED = "(3)payment_verified";
-    public static $STATUS_DELIVERED = "(4)delivered";
-    public static $STATUS_RECEIVED = "(5)received";
-    public static $STATUS_CANCELED = "(6)canceled";
+    public static $STATUS_ORDERED = 1;
+    public static $STATUS_PAYMENT_VERIFIED = 2;
+    public static $STATUS_SENT = 3;
+    public static $STATUS_RECEIVED = 4;
+    public static $STATUS_CANCELED = 5;
 
     public function __construct() {
         global $wpdb;
         
+        $this->orderStatusTable = $wpdb->prefix."wrg_order_status";
         $this->orderTable = $wpdb->prefix . "wrg_order";
         $this->orderShippingTable = $wpdb->prefix . "wrg_order_shipping";
         $this->orderItemsTable = $wpdb->prefix . "wrg_order_items";
@@ -37,6 +37,10 @@ class OrderService implements IOrderService {
 
         $ret = array();
         $rows = array();
+        
+        if ($page <= 0) {
+            $page = 1;
+        }
 
         // count all
         $sql = "SELECT count(*)
@@ -175,13 +179,14 @@ class OrderService implements IOrderService {
                     if (is_array($ti)) {
                         foreach ($ti as $i) {
                             $sql = $wpdb->prepare("
-                                INSERT INTO $this->orderItemsTable (order_id, item_id, name, quantity, weight)
-                                VALUES (%d, %s, %s, %d, %f)",
+                                INSERT INTO $this->orderItemsTable (order_id, item_id, name, quantity, weight, price)
+                                VALUES (%d, %s, %s, %d, %f, %d)",
                                 $orderId,
                                 $i->productId,
                                 $i->name,
                                 $i->quantity,
-                                $i->weight
+                                $i->weight,
+                                $i->price
                             );
 
                             $wpdb->query($sql);
@@ -204,7 +209,7 @@ class OrderService implements IOrderService {
                 
             $params = array($status);
             $others = "";
-            if ($status == self::$STATUS_DELIVERED) {
+            if ($status == self::$STATUS_SENT) {
                 $others .= ", dtdelivery=%s ";
                 array_push($params, date('Y-m-d H:i:s'));
             } else if ($status == self::$STATUS_PAYMENT_VERIFIED) {
@@ -337,14 +342,27 @@ class OrderService implements IOrderService {
     }
 
     public function getAllStatus() {
-        $ret = array();
-        $ret[self::$STATUS_ORDERED]="Ordered";
-        $ret[self::$STATUS_PAYMENT_VERIFIED]="Payment Verified";
-        $ret[self::$STATUS_PAYMENT_NOT_VERIFIED]="Payment Not Verified";
-        $ret[self::$STATUS_DELIVERED]="Delivered";
-        $ret[self::$STATUS_RECEIVED]="Received";
-        $ret[self::$STATUS_CANCELED]="Canceled";
+        
+        global $wpdb;
+
+        $ret = false;
+
+        $sql = "
+                SELECT id, description
+                  FROM $this->orderStatusTable
+                ORDER BY id
+                ";
+        
+        $result = $wpdb->get_results($sql);
+
+        if($result) {
+            foreach ($result as $row) {
+                $ret[$row->id] = $row->description;
+            }
+        }
+        
         return $ret;
+        
     }
 
     public function getOrderStat() {
@@ -352,13 +370,14 @@ class OrderService implements IOrderService {
 
         $ret = false;
 
-        $sql = $wpdb->query("
-                SELECT date_format(o.dtlastupdated, '%b') month, o.status, sum(i.quantity) total 
+        $sql = "
+                SELECT date_format(o.dtcreated, '%b') month, r.description status, sum(i.quantity) total 
                  FROM $this->orderTable o left join $this->orderItemsTable i on o.id = i.order_id
-                where o.dtlastupdated >= date_format(CURRENT_DATE, '%Y-01-01')
-                group by date_format(o.dtlastupdated, '%b'), o.status
-                order by o.dtlastupdated desc, o.status desc
-                ");
+                 JOIN $this->orderStatusTable r on o.status = r.id
+                where o.dtcreated >= date_format(CURRENT_DATE, '%Y-01-01')
+                group by date_format(o.dtcreated, '%b'), o.status
+                order by o.status, o.dtcreated
+                ";
 
         $result = $wpdb->get_results($sql);
 

@@ -1,11 +1,6 @@
 <?php
-/* 
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 /**
- * Description of WarungAdmnOrder
+ * Description of WarungAdminOrder
  *
  * @author hendra
  */
@@ -91,10 +86,14 @@ class WarungAdminOrder {
         // page nav
         $pageNav = new PageNav('wrg_order_page', $orders);
 
-        
+        $chartURL = WarungChart::getOrderChartURL(400,150);
         ?>
 <div class="wrap">
     <h2>Order</h2>
+    
+    <div class="wschart">
+        <img alt="order chart" src="<?=$chartURL?>"/>
+    </div>
     <div class="tablenav"><?=$pageNav->show(' ', '«', '»')?></div>
     <div class="clear"></div>
     <table class="wp-list-table widefat">
